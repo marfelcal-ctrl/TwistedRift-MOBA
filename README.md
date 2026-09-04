@@ -1,39 +1,50 @@
-# Twisted Rift — Prototype v0.2
+# Twisted Rift — Prototype v0.3
 
-This build is a direct response to the first playtest. v0.1 was too small and too placeholder-like; v0.2 expands the battlefield and makes the combat systems visible and testable.
+This build corrects the battlefield architecture after the v0.2 playtest. The goal is a much larger **square MOBA battlefield** with clear bases, lane ownership, jungle/water space, and proper respawn points.
 
-## Major changes from v0.1
-- World expanded to **4200 × 2600** with a follow camera instead of showing the whole map at once.
-- Added a **minimap**.
-- Added visible **water/Rift zones** and bridge crossings. Shallow water slows heroes by 10%.
-- Added **12 jungle camps** with small creeps, brutes, Crimson buffs and Azure buffs.
-- Jungle monsters aggro, fight back, reset/heal when abandoned, and respawn after 50 seconds.
-- Added **5v5 hero scaffolding** so the battlefield no longer feels empty.
-- RAMZX skills now have visible cast effects and work without needing a hidden perfect target condition.
-- Fixed the keyboard conflict where **W was both movement and Skill 2**. Skills now use **1 / 2 / 3 / 4** (Q/E/R are still optional aliases for some skills).
-- Execution Step now actually dashes forward even if no enemy is selected.
-- DEADLINE has a visible mark/dash/impact and can be tested instantly with the **TEST LV4** button or **L** key.
-- Basic attacks, skill hits, damage numbers, shields, hit bursts and screen shake were added to improve combat feedback.
-- Towers retain the current 95% Backdoor Protection, Rift Fury, Backdoor Repair, and 10% denial rules.
-- Pitlord still spawns at 3:30; **P** or the PITLORD test button spawns it immediately.
+## Major changes from v0.2
+- World expanded from 4200×2600 to **6400×6400**.
+- Map is now a **square battlefield**, not a leaf-shaped loop.
+- Bases remain diagonal: allied base bottom-left, enemy base top-right.
+- Lane 1 wraps around the left/top edges; Lane 2 wraps around the bottom/right edges.
+- Towers no longer alternate friendly/enemy along the lane. Each side owns its own half of each lane.
+- Each team has **8 towers total: 4 per lane**.
+  - T1 = Outer Tower
+  - T2 = Inner Tower
+  - G1 + G2 = two Core Guard towers for that lane
+  - Across both lanes, the Core is surrounded/defended by **4 Core Guard towers**.
+- Tower progression is enforced: **T1 → T2 → G1 → G2**. Deeper towers are fortified until the earlier tower on that lane falls.
+- Core becomes vulnerable only after all four Core Guard towers are destroyed.
+- Added dedicated **RESPAWN pads behind each Core**. Heroes now start and respawn there.
+- Added a much more visible diagonal river/water system with three bridges.
+- Jungle camps were repositioned into proper team-side jungle areas around the central river.
+- Minimap is now square and shows the expanded battlefield, towers, camps, heroes, Core, and respawn points.
+
+## Existing systems kept
+- RAMZX skills and combat prototype
+- 4-minion waves starting at 0.5 seconds, every 20 seconds
+- 95% Backdoor Protection
+- Rift Fury escalating tower damage
+- Backdoor Repair when a protected tower is attacked
+- 10% Tower Denial with 0 enemy tower gold on a successful deny
+- Jungle monsters, Crimson/Azure buffs
+- Pitlord at 3:30
+- 5v5 hero scaffolding
 
 ## Controls
 ### Desktop
-- **WASD** — move
-- **Space / J** — basic attack
-- **1 / Q** — Sever
-- **2** — Iron Order
-- **3 / E** — Execution Step
-- **4 / R** — DEADLINE
-- **F** — deny an eligible allied tower
-- **L** — instantly reach Level 4 for testing
-- **P** — spawn Pitlord immediately for testing
+- WASD — move
+- Space / J — basic attack
+- 1 / Q — Sever
+- 2 — Iron Order
+- 3 / E — Execution Step
+- 4 / R — DEADLINE
+- F — deny an eligible allied tower
+- L — instantly reach Level 4 for testing
+- P — spawn Pitlord immediately for testing
 
 ### Mobile
-Use the on-screen joystick and skill buttons. For the best experience, rotate the phone to landscape.
+Use the on-screen joystick and skill buttons in landscape orientation.
 
-## Notes
-This is still a mechanics prototype, not the final 3D game. Bot strategy, role-specific 0:00–5:00 economy, item shop, final Core logic, exact lane XP/gold sharing, and polished targeting are still future builds.
-
-## GitHub Pages
-Upload every file in this folder to the root of the GitHub repository and redeploy Pages. If your browser still shows v0.1, clear the site cache or remove/reinstall the PWA because v0.1 used a service worker cache.
+## GitHub Pages update
+Replace the old prototype files with all files from this folder and commit. If a previous cached version still appears, clear site data or remove/reinstall the PWA.

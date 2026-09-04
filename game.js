@@ -17,30 +17,42 @@ const hpFill = document.getElementById('hpFill');
 const shieldFill = document.getElementById('shieldFill');
 
 const VIEW_W = 1280, VIEW_H = 720;
-const WORLD_W = 4200, WORLD_H = 2600;
+const WORLD_W = 6400, WORLD_H = 6400;
 const TEAM_A = 0, TEAM_B = 1, NEUTRAL = 2;
 const TEAM_COLORS = ['#67caff', '#ff6976'];
-const BASES = [{x:480,y:2120},{x:3720,y:480}];
 
+// Core positions stay diagonal, but the battlefield itself is now a large square.
+const BASES = [{x:650,y:5750},{x:5750,y:650}];
+// Heroes spawn/respawn BEHIND the Core, toward the outside corner of the map.
+const SPAWNS = [{x:285,y:6115},{x:6115,y:285}];
+
+// Two true lanes wrap around the outside edges of the square battlefield.
+// Lane 1: left side -> top side. Lane 2: bottom side -> right side.
 const lane1 = [
-  {x:480,y:2120},{x:410,y:1780},{x:470,y:1370},{x:650,y:980},{x:980,y:650},
-  {x:1450,y:430},{x:2100,y:340},{x:2750,y:360},{x:3290,y:410},{x:3720,y:480}
+  {x:650,y:5750},{x:590,y:5300},{x:560,y:4550},{x:580,y:3750},{x:650,y:2950},
+  {x:820,y:2150},{x:1200,y:1450},{x:1850,y:950},{x:2650,y:680},{x:3500,y:560},
+  {x:4350,y:560},{x:5150,y:590},{x:5750,y:650}
 ];
 const lane2 = [
-  {x:480,y:2120},{x:840,y:2230},{x:1320,y:2290},{x:1950,y:2260},{x:2550,y:2140},
-  {x:3040,y:1920},{x:3400,y:1580},{x:3600,y:1120},{x:3710,y:760},{x:3720,y:480}
+  {x:650,y:5750},{x:1100,y:5810},{x:1850,y:5840},{x:2700,y:5820},{x:3500,y:5740},
+  {x:4300,y:5570},{x:5000,y:5200},{x:5450,y:4550},{x:5720,y:3750},{x:5840,y:2900},
+  {x:5840,y:2050},{x:5810,y:1250},{x:5750,y:650}
 ];
 const LANES = {1: lane1, 2: lane2};
 const revPath = p => [...p].reverse().map(v => ({...v}));
 
+// A wide diagonal river cuts through the jungle, making the center read clearly as water.
 const waterZones = [
-  {x:1820,y:1380,rx:400,ry:190,rot:-0.55},
-  {x:2300,y:1150,rx:430,ry:180,rot:-0.55},
-  {x:2740,y:920,rx:330,ry:150,rot:-0.55}
+  {x:1450,y:1450,rx:650,ry:230,rot:0.78},
+  {x:2250,y:2250,rx:650,ry:230,rot:0.78},
+  {x:3200,y:3200,rx:760,ry:250,rot:0.78},
+  {x:4150,y:4150,rx:650,ry:230,rot:0.78},
+  {x:4950,y:4950,rx:650,ry:230,rot:0.78}
 ];
 const bridgeZones = [
-  {x:1960,y:1310,w:250,h:100,rot:-0.55},
-  {x:2490,y:1040,w:250,h:100,rot:-0.55}
+  {x:2050,y:2050,w:320,h:125,rot:-0.79},
+  {x:3200,y:3200,w:370,h:140,rot:-0.79},
+  {x:4350,y:4350,w:320,h:125,rot:-0.79}
 ];
 
 const state = {
@@ -138,7 +150,7 @@ class Hero extends Entity{
     addEffect('burst',this.x,this.y,{life:.7,color:'#6f516f',radius:72});
     if(src instanceof Hero&&src.team!==this.team){src.gold+=500;src.gainXp(120);announce(this.player?'YOU HAVE FALLEN':'BLOODY MESS',1.0)}
   }
-  respawn(){this.dead=false;this.hp=this.maxHp;this.shield=0;this.x=BASES[this.team].x;this.y=BASES[this.team].y;this.pathWp=1;}
+  respawn(){this.dead=false;this.hp=this.maxHp;this.shield=0;this.x=SPAWNS[this.team].x;this.y=SPAWNS[this.team].y;this.pathWp=1;}
   gainXp(n){
     this.xp+=n;
     const req=[0,100,650,1800,3000,4300,5700,7200,8800,10500,12300,14200,16200,18300,20500];
@@ -159,7 +171,7 @@ class Hero extends Entity{
     const enemyHeroes=units.filter(u=>u instanceof Hero&&!u.dead&&u.team!==this.team&&dist(this,u)<=range);
     const enemyMinions=units.filter(u=>u instanceof Minion&&!u.dead&&u.team!==this.team&&dist(this,u)<=range);
     const jungle=units.filter(u=>u instanceof JungleCreep&&!u.dead&&dist(this,u)<=range);
-    const structs=towers.filter(t=>!t.dead&&t.team!==this.team&&dist(this,t)<=range);
+    const structs=[...towers.filter(t=>!t.dead&&t.team!==this.team&&dist(this,t)<=range),...cores.filter(c=>!c.dead&&c.team!==this.team&&c.vulnerable()&&dist(this,c)<=range)];
     if(heroFirst)candidates=[...enemyHeroes,...enemyMinions,...jungle,...structs]; else candidates=[...enemyMinions,...enemyHeroes,...jungle,...structs];
     if(state.pitlord&&!state.pitlord.dead&&dist(this,state.pitlord)<=range)candidates.push(state.pitlord);
     return candidates.sort((a,b)=>dist(this,a)-dist(this,b))[0]||null;
@@ -172,6 +184,7 @@ class Hero extends Entity{
     let dmg=this.atk*(this.crimsonUntil>state.time?1.15:1);
     addEffect('slash',this.x,this.y,{life:.18,angle:this.facing,color:this.team===TEAM_A?'#bcecff':'#ffb6be',radius:85});
     if(t instanceof Tower){if(state.pitBuffUntil[this.team]>state.time)dmg*=1.10;t.hitByHero(dmg,this);}
+    else if(t instanceof Core){if(state.pitBuffUntil[this.team]>state.time)dmg*=1.10;t.hitByHero(dmg,this);}
     else if(t instanceof Hero)t.take(dmg,'physical',this);
     else if(t instanceof JungleCreep)t.hit(dmg,this);
     else if(t instanceof Pitlord)t.hit(dmg,this);
@@ -250,8 +263,8 @@ class Minion extends Entity{
   }
   update(dt){
     if(this.dead)return;this.cool-=dt;
-    const targets=[...units.filter(u=>u!==this&&!u.dead&&u.team!==this.team&&u.team!==NEUTRAL&&dist(this,u)<105),...towers.filter(t=>!t.dead&&t.team!==this.team&&dist(this,t)<112)];
-    if(targets.length){targets.sort((a,b)=>dist(this,a)-dist(this,b));const t=targets[0];if(this.cool<=0){if(t instanceof Hero)t.take(this.atk,'physical',this);else if(t instanceof Tower)t.hitByMinion(this.atk,this);else t.damage(this.atk,this);this.cool=1.1;}return;}
+    const targets=[...units.filter(u=>u!==this&&!u.dead&&u.team!==this.team&&u.team!==NEUTRAL&&dist(this,u)<105),...towers.filter(t=>!t.dead&&t.team!==this.team&&dist(this,t)<112),...cores.filter(c=>!c.dead&&c.team!==this.team&&c.vulnerable()&&dist(this,c)<125)];
+    if(targets.length){targets.sort((a,b)=>dist(this,a)-dist(this,b));const t=targets[0];if(this.cool<=0){if(t instanceof Hero)t.take(this.atk,'physical',this);else if(t instanceof Tower)t.hitByMinion(this.atk,this);else if(t instanceof Core)t.hitByMinion(this.atk,this);else t.damage(this.atk,this);this.cool=1.1;}return;}
     const p=this.path[this.wp];if(!p)return;const n=norm(p.x-this.x,p.y-this.y);this.x+=n.x*this.ms*dt;this.y+=n.y*this.ms*dt;if(dist(this,p)<28)this.wp=Math.min(this.path.length-1,this.wp+1);
   }
   die(src){
@@ -301,10 +314,12 @@ class JungleCamp{
 
 class Tower extends Entity{
   constructor(team,lane,slot,x,y,maxHp,dmg,range){super(x,y,team);this.lane=lane;this.slot=slot;this.r=34;this.maxHp=maxHp;this.hp=maxHp;this.baseDmg=dmg;this.range=range;this.cool=0;this.fury=new Map();this.repairUntil=0;this.lastHitByEnemyAt=-999;}
+  // T1 (outer) -> T2 (inner) -> G1 -> G2. You cannot skip deeper structures.
+  vulnerable(){return towers.filter(t=>t.team===this.team&&t.lane===this.lane&&t.slot<this.slot&&!t.dead).length===0;}
   enemyMinionInRange(attackingTeam){return units.some(u=>u instanceof Minion&&!u.dead&&u.team===attackingTeam&&dist(this,u)<this.range);}
   backdoorAgainst(attackerTeam){return !this.enemyMinionInRange(attackerTeam);}
-  hitByHero(raw,hero){const back=this.backdoorAgainst(hero.team);const dmg=raw*(back?.05:1);this.lastHitByEnemyAt=state.time;this.damage(dmg,hero);if(back){this.repairUntil=state.time+2;floatText(this.x,this.y-60,'95% BLOCKED','#d9b5ed',13);}}
-  hitByMinion(raw,min){this.damage(raw,min);}
+  hitByHero(raw,hero){if(!this.vulnerable()){floatText(this.x,this.y-60,'FORTIFIED','#d9b5ed',13);return;}const back=this.backdoorAgainst(hero.team);const dmg=raw*(back?.05:1);this.lastHitByEnemyAt=state.time;this.damage(dmg,hero);if(back){this.repairUntil=state.time+2;floatText(this.x,this.y-60,'95% BLOCKED','#d9b5ed',13);}}
+  hitByMinion(raw,min){if(!this.vulnerable())return;this.damage(raw,min);}
   update(dt){
     if(this.dead)return;this.cool-=dt;
     if(this.repairUntil>state.time)this.hp=Math.min(this.maxHp,this.hp+this.maxHp*.015*dt);
@@ -323,42 +338,54 @@ class Tower extends Entity{
 
 class Core extends Entity{
   constructor(team,x,y){super(x,y,team);this.r=56;this.maxHp=18000;this.hp=this.maxHp;}
-  vulnerable(){return towers.filter(t=>t.team===this.team&&!t.dead).length===0;}
+  // The Core is protected by the FOUR Core Guard towers: G1/G2 from both lanes.
+  vulnerable(){return towers.filter(t=>t.team===this.team&&t.slot>=3&&!t.dead).length===0;}
+  hitByHero(raw,hero){if(!this.vulnerable()){floatText(this.x,this.y-82,'CORE SHIELDED','#d9b5ed',14);return;}this.damage(raw,hero);}
+  hitByMinion(raw,min){if(!this.vulnerable())return;this.damage(raw,min);}
+  die(src){this.dead=true;addEffect('burst',this.x,this.y,{life:1.4,color:'#e1b2eb',radius:260});state.gameOver=true;announce(src?.team===player.team?'THE RIFT IS YOURS':'YOUR JOURNEY ENDS HERE',3.0);}
 }
 
 class Pitlord extends Entity{
-  constructor(){super(2100,1290,NEUTRAL);this.r=62;this.maxHp=10000;this.hp=this.maxHp;this.atk=170;this.def=18;this.cool=0;this.aggro=null;}
+  constructor(){super(3200,3200,NEUTRAL);this.r=62;this.maxHp=10000;this.hp=this.maxHp;this.atk=170;this.def=18;this.cool=0;this.aggro=null;}
   hit(raw,src){const dmg=raw*100/(100+this.def);if(src instanceof Hero)this.aggro=src;this.damage(dmg,src);addEffect('hit',this.x,this.y,{life:.18,color:'#bd6fce',radius:76});}
   update(dt){if(this.dead)return;this.cool-=dt;const target=this.aggro&&!this.aggro.dead&&dist(this,this.aggro)<420?this.aggro:units.filter(u=>u instanceof Hero&&!u.dead&&dist(this,u)<190)[0];if(target&&this.cool<=0){target.take(this.atk,'physical',this);this.cool=1.15;addEffect('burst',target.x,target.y,{life:.2,color:'#7a3a88',radius:50});}}
   die(src){this.dead=true;addEffect('burst',this.x,this.y,{life:1.0,color:'#954aab',radius:190});if(src instanceof Hero){state.pitBuffUntil[src.team]=state.time+90;src.gold+=300;src.gainXp(250);announce('THE RIFT BOWS TO YOUR WILL',1.6);}}
 }
 
 function placeStructures(){
-  const hp=[6000,7500,9500,11000], dmg=[240,290,350,420], rng=[230,240,250,260], progress=[.20,.42,.73,.86];
+  const hp=[6000,7500,9500,11000], dmg=[240,290,350,420], rng=[230,240,250,260];
+  // Slot meaning: 1=Outer, 2=Inner, 3=Core Guard 1, 4=Core Guard 2.
+  // From each team's own Core outward, guards are very close to base; lane towers are farther out.
+  const progressBySlot={1:.34,2:.22,3:.095,4:.045};
   for(const team of [TEAM_A,TEAM_B])for(const lane of [1,2]){
     const path=team===TEAM_A?LANES[lane]:revPath(LANES[lane]);
-    for(let i=0;i<4;i++){const p=pointAlongPath(path,progress[i]);towers.push(new Tower(team,lane,i+1,p.x,p.y,hp[i],dmg[i],rng[i]));}
+    for(let slot=1;slot<=4;slot++){
+      const p=pointAlongPath(path,progressBySlot[slot]);
+      towers.push(new Tower(team,lane,slot,p.x,p.y,hp[slot-1],dmg[slot-1],rng[slot-1]));
+    }
   }
   cores.push(new Core(TEAM_A,BASES[0].x,BASES[0].y),new Core(TEAM_B,BASES[1].x,BASES[1].y));
 }
 
 function placeCamps(){
   const data=[
-    [920,1700,'Crimson Guardian','buff','crimson'],[1260,1450,'Rift Wolves','small'],[1450,1870,'Stone Brute','brute'],
-    [1740,1580,'Azure Guardian','buff','azure'],[2040,1910,'Grave Beasts','small'],[2280,1630,'Rift Brute','brute'],
-    [3280,900,'Crimson Guardian','buff','crimson'],[2940,1140,'Rift Wolves','small'],[2770,720,'Stone Brute','brute'],
-    [2470,1010,'Azure Guardian','buff','azure'],[2200,700,'Grave Beasts','small'],[1930,970,'Rift Brute','brute']
+    // Team A jungle (south-west side of the river)
+    [1150,5000,'Crimson Guardian','buff','crimson'],[1780,4700,'Rift Wolves','small'],[1250,3850,'Stone Brute','brute'],
+    [2450,5050,'Azure Guardian','buff','azure'],[2750,4350,'Grave Beasts','small'],[2050,3650,'Rift Brute','brute'],
+    // Team B jungle (north-east side of the river)
+    [5250,1400,'Crimson Guardian','buff','crimson'],[4680,1780,'Rift Wolves','small'],[3950,1250,'Stone Brute','brute'],
+    [5000,2450,'Azure Guardian','buff','azure'],[4350,2750,'Grave Beasts','small'],[3650,2050,'Rift Brute','brute']
   ];
   for(const d of data)camps.push(new JungleCamp(...d));
 }
 
 placeStructures();placeCamps();
 
-const player=new Hero(BASES[0].x+70,BASES[0].y-50,TEAM_A,'RAMZX',true,'EXP');units.push(player);
+const player=new Hero(SPAWNS[0].x+80,SPAWNS[0].y-70,TEAM_A,'RAMZX',true,'EXP');units.push(player);
 const allyNames=[['SERA','SUPPORT',1],['KAIRO','GOLD',2],['GRIMM','ROAMER',1],['VOLKRIN','JUNGLE',2]];
-for(let i=0;i<allyNames.length;i++){const [n,r,l]=allyNames[i];const h=new Hero(BASES[0].x+30+i*24,BASES[0].y+40+i*20,TEAM_A,n,false,r);h.lane=l;h.maxHp=r==='ROAMER'?3300:2600;h.hp=h.maxHp;h.aiMode=r;units.push(h);}
+for(let i=0;i<allyNames.length;i++){const [n,r,l]=allyNames[i];const h=new Hero(SPAWNS[0].x+40+i*26,SPAWNS[0].y-10+i*20,TEAM_A,n,false,r);h.lane=l;h.maxHp=r==='ROAMER'?3300:2600;h.hp=h.maxHp;h.aiMode=r;units.push(h);}
 const enemyNames=[['NYRA','JUNGLE',1],['VEYRA','TACTICAL',1],['KAELOR','EXP',1],['RAZE','GOLD',2],['SERA','SUPPORT',2]];
-for(let i=0;i<enemyNames.length;i++){const [n,r,l]=enemyNames[i];const h=new Hero(BASES[1].x-40-i*24,BASES[1].y+40+i*18,TEAM_B,n,false,r);h.lane=l;h.maxHp=r==='SUPPORT'?2900:2550;h.hp=h.maxHp;units.push(h);}
+for(let i=0;i<enemyNames.length;i++){const [n,r,l]=enemyNames[i];const h=new Hero(SPAWNS[1].x-40-i*26,SPAWNS[1].y+10+i*20,TEAM_B,n,false,r);h.lane=l;h.maxHp=r==='SUPPORT'?2900:2550;h.hp=h.maxHp;units.push(h);}
 
 function spawnWave(){
   for(const team of [TEAM_A,TEAM_B])for(const lane of [1,2])for(let i=0;i<4;i++)units.push(new Minion(team,lane,i));
@@ -454,14 +481,20 @@ function drawWorldBackground(){
   for(let y=sy;y<VIEW_H;y+=grid){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(VIEW_W,y);ctx.stroke();}
   drawPath(lane1,'#5c5261',82);drawPath(lane1,'#29252d',7);drawPath(lane2,'#5f574c',82);drawPath(lane2,'#2a2724',7);
   // Central Rift route
-  const rs=screenPos(930,1900),re=screenPos(3230,650);ctx.strokeStyle='#6e3e7e';ctx.lineWidth=13;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(rs.x,rs.y);ctx.lineTo(re.x,re.y);ctx.stroke();ctx.setLineDash([]);
+  const rs=screenPos(900,5500),re=screenPos(5500,900);ctx.strokeStyle='#6e3e7e';ctx.lineWidth=13;ctx.setLineDash([24,18]);ctx.beginPath();ctx.moveTo(rs.x,rs.y);ctx.lineTo(re.x,re.y);ctx.stroke();ctx.setLineDash([]);
   // Water
   for(const z of waterZones){const s=screenPos(z.x,z.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(z.rot);ctx.beginPath();ctx.ellipse(0,0,z.rx,z.ry,0,0,Math.PI*2);ctx.fillStyle='#16313a';ctx.fill();ctx.strokeStyle='#245160';ctx.lineWidth=5;ctx.stroke();for(let i=-2;i<=2;i++){ctx.strokeStyle='#2c6574aa';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-z.rx*.65,i*34);ctx.quadraticCurveTo(0,i*34+18,z.rx*.65,i*34);ctx.stroke();}ctx.restore();}
   for(const z of bridgeZones){const s=screenPos(z.x,z.y);ctx.save();ctx.translate(s.x,s.y);ctx.rotate(z.rot);ctx.fillStyle='#514335';ctx.fillRect(-z.w/2,-z.h/2,z.w,z.h);ctx.strokeStyle='#806a50';ctx.lineWidth=4;for(let x=-z.w/2;x<z.w/2;x+=32){ctx.beginPath();ctx.moveTo(x,-z.h/2);ctx.lineTo(x,z.h/2);ctx.stroke();}ctx.restore();}
-  // bases
-  for(let team=0;team<2;team++){const b=screenPos(BASES[team].x,BASES[team].y);ctx.beginPath();ctx.fillStyle=team===0?'#183b4d':'#4d1b24';ctx.arc(b.x,b.y,150,0,Math.PI*2);ctx.fill();ctx.strokeStyle=TEAM_COLORS[team];ctx.lineWidth=5;ctx.stroke();}
+  // Square fortress zones + respawn pads behind each Core.
+  for(let team=0;team<2;team++){
+    const b=screenPos(BASES[team].x,BASES[team].y), sp=screenPos(SPAWNS[team].x,SPAWNS[team].y);
+    ctx.fillStyle=team===0?'#163848':'#471923';ctx.fillRect(b.x-190,b.y-190,380,380);
+    ctx.strokeStyle=TEAM_COLORS[team];ctx.lineWidth=5;ctx.strokeRect(b.x-190,b.y-190,380,380);
+    ctx.beginPath();ctx.fillStyle=team===0?'#1c536b':'#6b202c';ctx.arc(sp.x,sp.y,86,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#f2e7f766';ctx.lineWidth=4;ctx.stroke();
+    ctx.fillStyle='#f4eafa';ctx.font='800 11px system-ui';ctx.textAlign='center';ctx.fillText('RESPAWN',sp.x,sp.y+4);ctx.textAlign='left';
+  }
   // pit ring
-  const p=screenPos(2100,1290);ctx.beginPath();ctx.fillStyle='#201326';ctx.arc(p.x,p.y,130,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7f4790';ctx.lineWidth=7;ctx.stroke();ctx.fillStyle='#c69ed0';ctx.font='800 16px system-ui';ctx.textAlign='center';ctx.fillText('PITLORD',p.x,p.y+5);ctx.textAlign='left';
+  const p=screenPos(3200,3200);ctx.beginPath();ctx.fillStyle='#201326';ctx.arc(p.x,p.y,130,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7f4790';ctx.lineWidth=7;ctx.stroke();ctx.fillStyle='#c69ed0';ctx.font='800 16px system-ui';ctx.textAlign='center';ctx.fillText('PITLORD',p.x,p.y+5);ctx.textAlign='left';
 }
 function hpbar(e,w=62){
   const s=screenPos(e.x,e.y),x=s.x-w/2,y=s.y-e.r-18;if(x<-w||x>VIEW_W||y<-30||y>VIEW_H)return;
@@ -482,9 +515,9 @@ function drawEntity(u){
 }
 function drawTower(t){
   if(t.dead)return;const s=screenPos(t.x,t.y);if(s.x<-100||s.x>VIEW_W+100||s.y<-100||s.y>VIEW_H+100)return;
-  const back=t.backdoorAgainst(1-t.team);ctx.save();ctx.translate(s.x,s.y);ctx.fillStyle=t.team===0?'#2f6d8d':'#8d3540';ctx.fillRect(-24,-38,48,76);ctx.fillStyle='#c4b2ca';ctx.fillRect(-15,-54,30,20);ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.strokeRect(-24,-38,48,76);if(back){ctx.strokeStyle='#b163c7';ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,52,0,Math.PI*2);ctx.stroke();}ctx.fillStyle='#fff';ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillText(`T${t.slot}`,0,4);ctx.textAlign='left';ctx.restore();hpbar(t,84);
+  const back=t.backdoorAgainst(1-t.team);ctx.save();ctx.translate(s.x,s.y);ctx.fillStyle=t.team===0?'#2f6d8d':'#8d3540';ctx.fillRect(-24,-38,48,76);ctx.fillStyle='#c4b2ca';ctx.fillRect(-15,-54,30,20);ctx.strokeStyle='#111';ctx.lineWidth=3;ctx.strokeRect(-24,-38,48,76);if(back){ctx.strokeStyle='#b163c7';ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,52,0,Math.PI*2);ctx.stroke();}ctx.fillStyle='#fff';ctx.font='900 10px system-ui';ctx.textAlign='center';const label=t.slot===1?'T1':t.slot===2?'T2':t.slot===3?'G1':'G2';ctx.fillText(label,0,4);if(!t.vulnerable()){ctx.strokeStyle='#eed9ff88';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,44,0,Math.PI*2);ctx.stroke();}ctx.textAlign='left';ctx.restore();hpbar(t,84);
 }
-function drawCore(c){const s=screenPos(c.x,c.y);ctx.beginPath();ctx.fillStyle=c.team===0?'#22506a':'#6a2630';ctx.arc(s.x,s.y,c.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=c.vulnerable()?'#fff':'#c39acf';ctx.lineWidth=6;ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText(c.vulnerable()?'CORE':'CORE SHIELDED',s.x,s.y+4);ctx.textAlign='left';hpbar(c,100);}
+function drawCore(c){if(c.dead)return;const s=screenPos(c.x,c.y);if(s.x<-120||s.x>VIEW_W+120||s.y<-120||s.y>VIEW_H+120)return;ctx.beginPath();ctx.fillStyle=c.team===0?'#22506a':'#6a2630';ctx.arc(s.x,s.y,c.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=c.vulnerable()?'#fff':'#c39acf';ctx.lineWidth=6;ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 12px system-ui';ctx.textAlign='center';ctx.fillText(c.vulnerable()?'CORE':'CORE SHIELDED',s.x,s.y+4);ctx.textAlign='left';hpbar(c,100);}
 function drawPitlord(){
   if(!state.pitlord||state.pitlord.dead)return;const p=state.pitlord,s=screenPos(p.x,p.y);ctx.beginPath();ctx.fillStyle='#703682';ctx.arc(s.x,s.y,p.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e3c7ea';ctx.lineWidth=5;ctx.stroke();ctx.fillStyle='#fff';ctx.font='900 15px system-ui';ctx.textAlign='center';ctx.fillText('PITLORD',s.x,s.y+5);ctx.textAlign='left';hpbar(p,130);
 }
@@ -495,7 +528,9 @@ function drawEffects(){
 function drawMinimap(){
   const w=minimap.width,h=minimap.height,sx=w/WORLD_W,sy=h/WORLD_H;mctx.clearRect(0,0,w,h);mctx.fillStyle='#0d0c11';mctx.fillRect(0,0,w,h);
   function mp(path,color){mctx.strokeStyle=color;mctx.lineWidth=4;mctx.beginPath();mctx.moveTo(path[0].x*sx,path[0].y*sy);for(const p of path.slice(1))mctx.lineTo(p.x*sx,p.y*sy);mctx.stroke();}
-  mp(lane1,'#63586a');mp(lane2,'#6c6255');mctx.strokeStyle='#633973';mctx.lineWidth=2;mctx.beginPath();mctx.moveTo(930*sx,1900*sy);mctx.lineTo(3230*sx,650*sy);mctx.stroke();
+  mp(lane1,'#63586a');mp(lane2,'#6c6255');mctx.strokeStyle='#633973';mctx.lineWidth=2;mctx.beginPath();mctx.moveTo(900*sx,5500*sy);mctx.lineTo(5500*sx,900*sy);mctx.stroke();
+  mctx.strokeStyle='#28515c';mctx.lineWidth=5;mctx.beginPath();mctx.moveTo(900*sx,900*sy);mctx.lineTo(5500*sx,5500*sy);mctx.stroke();
+  for(let team=0;team<2;team++){mctx.fillStyle=TEAM_COLORS[team];mctx.fillRect(BASES[team].x*sx-4,BASES[team].y*sy-4,8,8);mctx.strokeStyle='#fff8';mctx.strokeRect(SPAWNS[team].x*sx-3,SPAWNS[team].y*sy-3,6,6);}
   for(const t of towers){if(t.dead)continue;mctx.fillStyle=TEAM_COLORS[t.team];mctx.fillRect(t.x*sx-2,t.y*sy-2,4,4);}
   for(const c of camps){mctx.fillStyle=c.color;mctx.beginPath();mctx.arc(c.x*sx,c.y*sy,2.2,0,Math.PI*2);mctx.fill();}
   for(const u of units){if(!(u instanceof Hero)||u.dead)continue;mctx.fillStyle=u.player?'#fff':TEAM_COLORS[u.team];mctx.beginPath();mctx.arc(u.x*sx,u.y*sy,u.player?4:2.6,0,Math.PI*2);mctx.fill();}
