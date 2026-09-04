@@ -1,0 +1,10 @@
+{
+  "name":"Twisted Rift Prototype",
+  "short_name":"TwistedRift",
+  "start_url":"./",
+  "display":"fullscreen",
+  "background_color":"#0c0910",
+  "theme_color":"#100b16",
+  "orientation":"landscape",
+  "icons":[]
+}

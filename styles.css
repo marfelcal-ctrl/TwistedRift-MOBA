@@ -1,0 +1,26 @@
+:root{color-scheme:dark;--bg:#0c0910;--panel:#17111f;--ink:#f5eff8;--muted:#afa4b8;--accent:#8f4aaa;--danger:#b9424f;--gold:#d7b15c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
+button{font:inherit;color:inherit}
+#shell{height:100%;display:flex;flex-direction:column}
+#topbar{height:44px;min-height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:linear-gradient(90deg,#120d18,#21142c,#120d18);border-bottom:1px solid #392744;z-index:10}
+.brand{font-weight:900;letter-spacing:.08em}.brand span{font-size:11px;color:var(--muted);font-weight:700}.brand::first-letter{color:#fff}
+#matchInfo{font-size:13px;color:#ddd3e2}
+#soundBtn{border:0;background:transparent;font-size:18px;cursor:pointer}
+#gameWrap{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#060508}
+#game{width:100%;height:100%;object-fit:contain;touch-action:none;background:#15131a}
+#announcement{pointer-events:none;position:absolute;left:50%;top:14%;transform:translateX(-50%);font-size:clamp(24px,5vw,52px);font-weight:1000;letter-spacing:.06em;text-align:center;text-shadow:0 3px 0 #000,0 0 18px #5b246c;opacity:0;transition:opacity .18s;white-space:nowrap}
+#announcement.show{opacity:1}
+#pitlordBanner{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#100b16cc;border:1px solid #563364;border-radius:12px;padding:7px 12px;font-size:12px;font-weight:800;letter-spacing:.05em}
+#help{height:28px;min-height:28px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;background:#100c15;border-top:1px solid #251a2d}
+#touchUI{position:absolute;inset:0;pointer-events:none}
+.joystick{pointer-events:auto;position:absolute;left:4vw;bottom:5vh;width:128px;height:128px;border-radius:50%;background:#2d22334d;border:2px solid #8d789666;touch-action:none}
+#stick{position:absolute;left:39px;top:39px;width:50px;height:50px;border-radius:50%;background:#d7c4df99;border:2px solid #fff7}
+#skillPad{position:absolute;right:3vw;bottom:4vh;width:300px;height:210px;pointer-events:none}
+.skill{pointer-events:auto;position:absolute;border-radius:50%;width:58px;height:58px;border:2px solid #fff3;background:#281832dd;box-shadow:0 4px 14px #0008;font-weight:900;touch-action:none}
+.skill:active{transform:scale(.95)}
+.skill.attack{width:82px;height:82px;right:0;bottom:0;background:#55233bdd;border-color:#d65b77aa}
+.skill[data-action=s1]{right:92px;bottom:8px}.skill[data-action=s2]{right:62px;bottom:79px}.skill[data-action=s3]{right:128px;bottom:116px}.skill.ult{right:0;bottom:112px;width:66px;height:66px;background:#552568dd;border-color:#b778ceaa}.skill.utility{left:0;bottom:0;width:62px;height:62px;font-size:11px;background:#3b2d1bdd;border-color:#d7b15c88}
+.skill.cooling{filter:grayscale(.65) brightness(.55)}
+.skill.cooling::after{content:attr(data-cd);position:absolute;inset:0;display:grid;place-items:center;font-size:14px}
+@media(max-width:720px){#help{display:none}.brand{font-size:12px}#matchInfo{font-size:11px}.joystick{width:112px;height:112px;left:18px;bottom:22px}#stick{left:34px;top:34px;width:44px;height:44px}#skillPad{transform:scale(.88);transform-origin:bottom right;right:10px;bottom:12px}}

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#100b16" />
+  <title>Twisted Rift — Prototype v0.1</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="shell">
+    <header id="topbar">
+      <div class="brand">TWISTED RIFT <span>v0.1</span></div>
+      <div id="matchInfo">00:00 · EXP · Lv 1 · 0g</div>
+      <button id="soundBtn" title="Toggle sound">🔊</button>
+    </header>
+
+    <main id="gameWrap">
+      <canvas id="game" width="1600" height="900" aria-label="Twisted Rift game prototype"></canvas>
+      <div id="announcement"></div>
+      <div id="pitlordBanner">PITLORD: DORMANT · 03:30</div>
+
+      <div id="touchUI">
+        <div id="joystick" class="joystick"><div id="stick"></div></div>
+        <div id="skillPad">
+          <button class="skill utility" data-action="deny">DENY</button>
+          <button class="skill ult" data-action="ult">R</button>
+          <button class="skill" data-action="s3">E</button>
+          <button class="skill" data-action="s2">W</button>
+          <button class="skill" data-action="s1">Q</button>
+          <button class="skill attack" data-action="attack">ATTACK</button>
+        </div>
+      </div>
+    </main>
+
+    <footer id="help">
+      Desktop: WASD move · J/Space attack · Q/W/E/R skills · F deny · P debug-spawn Pitlord
+    </footer>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
