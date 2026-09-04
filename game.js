@@ -23,7 +23,7 @@ const WORLD_W = 9600, WORLD_H = 9600;
 const TEAM_A = 0, TEAM_B = 1, NEUTRAL = 2;
 const TEAM_COLORS = ['#67caff', '#ff6976'];
 
-// v0.4 source of truth: a large SQUARE battlefield with diagonal bases,
+// v0.5 source of truth: a large SQUARE battlefield with diagonal bases,
 // two perimeter lanes, a broad upper-left -> lower-right river, and Pitlord at center.
 const BASES = [{x:900,y:8700},{x:8700,y:900}];
 const SPAWNS = [{x:340,y:9260},{x:9260,y:340}];
@@ -78,7 +78,13 @@ const state = {
   effects: [],
   floating: [],
   screenShake: 0,
-  matchStartAnnounced: false
+  matchStartAnnounced: false,
+  teamKills: [0,0],
+  firstBlood: false,
+  pitRespawnAt: 0,
+  pitKills: [0,0],
+  economyAnnounced: false,
+  resultsShown: false
 };
 
 let soundOn = true, audioCtx = null;
@@ -160,9 +166,37 @@ function addEffect(type,x,y,opts={}){ state.effects.push({type,x,y,life:opts.lif
 
 const units=[], towers=[], cores=[], camps=[];
 
+function earlyEconomy(){ return state.time < 300; }
+function isRoamerRole(h){ return h && (h.role==='ROAMER'||h.role==='SUPPORT'); }
+function isLaneFarmer(h){ return h && (h.role==='EXP'||h.role==='GOLD'||h.role==='TACTICAL'); }
+function canHeroDamageMinion(h){ return !earlyEconomy() || h.role!=='JUNGLE'; }
+function canHeroDamageJungle(h){ return !earlyEconomy() || h.role==='JUNGLE'; }
+function killXpForParticipants(n){ return ({1:140,2:115,3:100,4:95,5:90})[Math.max(1,Math.min(5,n))]||90; }
+
+function damageTargetByHero(hero,target,dmg,type='physical'){
+  if(!target||target.dead)return false;
+  if(target instanceof Minion){
+    if(!canHeroDamageMinion(hero)){ if(hero.player)floatText(hero.x,hero.y-55,'JUNGLER: NO LANE FARM','#d8b45e',13); return false; }
+    target.hitByHero(dmg,hero); return true;
+  }
+  if(target instanceof JungleCreep){
+    if(!canHeroDamageJungle(hero)){ if(hero.player)floatText(hero.x,hero.y-55,'JUNGLE PROTECTED UNTIL 5:00','#d8b45e',12); return false; }
+    target.hit(dmg,hero); return true;
+  }
+  if(target instanceof Pitlord){ target.hit(dmg,hero); return true; }
+  if(target instanceof Hero){ target.take(dmg,type,hero); return true; }
+  if(target instanceof Tower){ if(state.pitBuffUntil[hero.team]>state.time)dmg*=1.10; target.hitByHero(dmg,hero); return true; }
+  if(target instanceof Core){ if(state.pitBuffUntil[hero.team]>state.time)dmg*=1.10; target.hitByHero(dmg,hero); return true; }
+  target.damage(dmg,hero); return true;
+}
+
 class Entity{
-  constructor(x,y,team){this.x=x;this.y=y;this.team=team;this.dead=false;this.r=16;this.maxHp=100;this.hp=100;}
-  damage(n,src){if(this.dead)return;this.hp-=n;if(n>0)floatText(this.x,this.y-this.r,`-${Math.round(n)}`,'#ffd6d6',14);if(this.hp<=0){this.hp=0;this.die(src)}}
+  constructor(x,y,team){this.x=x;this.y=y;this.team=team;this.dead=false;this.r=16;this.maxHp=100;this.hp=100;this.damageLog=new Map();}
+  damage(n,src){
+    if(this.dead)return;
+    if(this instanceof Hero && src instanceof Hero && src.team!==this.team)this.damageLog.set(src,state.time);
+    this.hp-=n;if(n>0)floatText(this.x,this.y-this.r,`-${Math.round(n)}`,'#ffd6d6',14);if(this.hp<=0){this.hp=0;this.die(src)}
+  }
   die(){this.dead=true}
 }
 
@@ -173,21 +207,50 @@ class Hero extends Entity{
     this.ms=player?305:295;this.gold=0;this.xp=0;this.level=1;this.shield=0;this.facing=team===TEAM_A?-0.45:2.7;
     this.cool={s1:0,s2:0,s3:0,ult:0,attack:0};this.respawnAt=0;this.botThink=0;this.pathWp=1;
     this.lane = role==='GOLD'?2:1;this.targetMark=null;this.crimsonUntil=0;this.azureUntil=0;
-    this.aiMode='lane';this.aiCampIndex=0;
+    this.aiMode='lane';this.aiCampIndex=0;this.aiTargetCamp=null;this.aiRetreat=false;
+    this.kills=0;this.deaths=0;this.assists=0;this.heroDamage=0;this.towerDamage=0;this.damageTaken=0;this.pitlordParticipation=0;
+    this.killStreak=0;this.rapidKills=0;this.lastKillAt=-999;this.lastCombatAt=-999;
   }
   take(raw,type='physical',src=null){
     if(this.dead)return;
     let dmg=raw;
     if(type==='physical') dmg=raw*100/(100+this.def);
+    if(src instanceof Hero&&src.team!==this.team){src.heroDamage+=Math.max(0,dmg);src.lastCombatAt=state.time;this.lastCombatAt=state.time;}
+    this.damageTaken+=Math.max(0,dmg);
     if(this.shield>0){const used=Math.min(this.shield,dmg);this.shield-=used;dmg-=used;}
     if(dmg>0)this.damage(dmg,src);
   }
   die(src){
-    this.dead=true;this.respawnAt=state.time+10+Math.min(20,this.level*1.4);
+    const victimStreak=this.killStreak;this.dead=true;this.deaths++;this.killStreak=0;
+    const late=Math.min(18,state.time/60*1.6), levelPart=Math.min(24,this.level*1.75);
+    this.respawnAt=state.time+Math.min(50,6+late+levelPart);
     addEffect('burst',this.x,this.y,{life:.7,color:'#6f516f',radius:72});
-    if(src instanceof Hero&&src.team!==this.team){src.gold+=500;src.gainXp(120);announce(this.player?'YOU HAVE FALLEN':'BLOODY MESS',1.0)}
+    let killer=(src instanceof Hero&&src.team!==this.team)?src:null;
+    if(!killer){
+      const recent=[...this.damageLog.entries()].filter(([h,t])=>h instanceof Hero&&h.team!==this.team&&state.time-t<=8).sort((a,b)=>b[1]-a[1]);
+      killer=recent[0]?.[0]||null;
+    }
+    if(killer){
+      const team=killer.team;
+      const participants=units.filter(h=>h instanceof Hero&&!h.dead&&h.team===team&&(h===killer||(this.damageLog.get(h)??-999)>=state.time-8||dist(h,this)<=420));
+      if(!participants.includes(killer))participants.push(killer);
+      const xpEach=killXpForParticipants(participants.length);
+      killer.kills++;killer.killStreak++;state.teamKills[team]++;killer.gold+=500;
+      if(state.time-killer.lastKillAt<=8)killer.rapidKills++;else killer.rapidKills=1;killer.lastKillAt=state.time;
+      for(const h of participants){h.gainXp(xpEach);if(h!==killer){h.assists++;h.gold+=earlyEconomy()&&isRoamerRole(h)?250:150;}}
+      if(!state.firstBlood){state.firstBlood=true;announce('HA HA HA... BLOODY MESS.',1.5);}
+      else if(victimStreak>=3)announce('CROWN CLEAVED',1.15);
+      else if(this.player)announce('YOU HAVE FALLEN',1.0);
+      else{
+        const multi={2:'TWIN BLADES',3:'EXECUTIONER',4:'WARLORD',5:'SOVEREIGN OF BLOOD'}[killer.rapidKills];
+        const streak={3:'SLAYER',5:'DREAD KNIGHT',7:'MYTHIC MENACE',10:'IMMORTAL TITAN',15:'BLACK SOVEREIGN',20:'DEATHLESS'}[killer.killStreak];
+        announce(multi||streak||'ENEMY SLAIN',1.0);
+      }
+    }
+    this.damageLog.clear();
   }
-  respawn(){this.dead=false;this.hp=this.maxHp;this.shield=0;this.x=SPAWNS[this.team].x;this.y=SPAWNS[this.team].y;this.pathWp=1;}
+
+  respawn(){this.dead=false;this.hp=this.maxHp;this.shield=0;this.x=SPAWNS[this.team].x;this.y=SPAWNS[this.team].y;this.pathWp=1;this.damageLog.clear();if(this.player)announce('YOU HAVE RETURNED',.8);}
   gainXp(n){
     this.xp+=n;
     const req=[0,100,650,1800,3000,4300,5700,7200,8800,10500,12300,14200,16200,18300,20500];
@@ -197,17 +260,21 @@ class Hero extends Entity{
     }
   }
   forceLevel4(){this.xp=1800;while(this.level<4){this.level++;this.maxHp+=185;this.hp+=185;this.atk+=7.5;}announce('ULTIMATE READY',.8)}
-  speed(){return this.ms*(isInWater(this.x,this.y)?.90:1);}
+  speed(){const pit=state.pitBuffUntil[this.team]>state.time&&state.time-this.lastCombatAt>3?1.05:1;return this.ms*(isInWater(this.x,this.y)?.90:1)*pit;}
   update(dt){
     for(const k in this.cool)this.cool[k]=Math.max(0,this.cool[k]-dt*(this.azureUntil>state.time?1.20:1));
     if(this.dead){if(state.time>=this.respawnAt)this.respawn();return;}
+    // Fountain is behind the Core: rapid healing and safe regrouping.
+    if(dist(this,SPAWNS[this.team])<260)this.hp=Math.min(this.maxHp,this.hp+this.maxHp*.10*dt);
+    // Roamer/Support early economy: 10 gold/sec + roaming XP. Jungle companion XP is added on camp kills.
+    if(earlyEconomy()&&isRoamerRole(this)){this.gold+=10*dt;this.gainXp(7*dt);}
     if(!this.player)this.botAI(dt);
   }
   selectTarget(range=180,heroFirst=true){
     let candidates=[];
     const enemyHeroes=units.filter(u=>u instanceof Hero&&!u.dead&&u.team!==this.team&&dist(this,u)<=range);
-    const enemyMinions=units.filter(u=>u instanceof Minion&&!u.dead&&u.team!==this.team&&dist(this,u)<=range);
-    const jungle=units.filter(u=>u instanceof JungleCreep&&!u.dead&&dist(this,u)<=range);
+    const enemyMinions=canHeroDamageMinion(this)?units.filter(u=>u instanceof Minion&&!u.dead&&u.team!==this.team&&dist(this,u)<=range):[];
+    const jungle=canHeroDamageJungle(this)?units.filter(u=>u instanceof JungleCreep&&!u.dead&&dist(this,u)<=range):[];
     const structs=[...towers.filter(t=>!t.dead&&t.team!==this.team&&dist(this,t)<=range),...cores.filter(c=>!c.dead&&c.team!==this.team&&c.vulnerable()&&dist(this,c)<=range)];
     if(heroFirst)candidates=[...enemyHeroes,...enemyMinions,...jungle,...structs]; else candidates=[...enemyMinions,...enemyHeroes,...jungle,...structs];
     if(state.pitlord&&!state.pitlord.dead&&dist(this,state.pitlord)<=range)candidates.push(state.pitlord);
@@ -220,12 +287,7 @@ class Hero extends Entity{
     this.facing=Math.atan2(t.y-this.y,t.x-this.x);
     let dmg=this.atk*(this.crimsonUntil>state.time?1.15:1);
     addEffect('slash',this.x,this.y,{life:.18,angle:this.facing,color:this.team===TEAM_A?'#bcecff':'#ffb6be',radius:85});
-    if(t instanceof Tower){if(state.pitBuffUntil[this.team]>state.time)dmg*=1.10;t.hitByHero(dmg,this);}
-    else if(t instanceof Core){if(state.pitBuffUntil[this.team]>state.time)dmg*=1.10;t.hitByHero(dmg,this);}
-    else if(t instanceof Hero)t.take(dmg,'physical',this);
-    else if(t instanceof JungleCreep)t.hit(dmg,this);
-    else if(t instanceof Pitlord)t.hit(dmg,this);
-    else t.damage(dmg,this);
+    damageTargetByHero(this,t,dmg,'physical');
     tone(118,.055,'square',.02);return true;
   }
   s1(){
@@ -237,8 +299,7 @@ class Hero extends Entity{
       const d=dist(this,u);if(d>range+u.r)continue;
       const a=Math.atan2(u.y-this.y,u.x-this.x);if(Math.abs(angleDiff(a,this.facing))>half)continue;
       const dmg=220+this.atk*.9;
-      if(u instanceof Hero)u.take(dmg,'physical',this); else if(u instanceof JungleCreep||u instanceof Pitlord)u.hit(dmg,this); else u.damage(dmg,this);
-      hits++;
+      if(damageTargetByHero(this,u,dmg,'physical'))hits++;
     }
     if(hits)state.screenShake=.10;tone(86,.12,'sawtooth',.04);
   }
@@ -255,14 +316,14 @@ class Hero extends Entity{
     addEffect('dash',start.x,start.y,{life:.35,x2:this.x,y2:this.y,color:'#bc6073'});
     let t=null,best=9999;
     for(const u of units){if(u.dead||u.team===this.team||u===this)continue;const d=dist(this,u);if(d<95&&d<best){best=d;t=u;}}
-    if(t){let dmg=180+this.atk*.8;if(t instanceof Hero&&t.hp/t.maxHp<.4)dmg*=1.3;if(t instanceof Hero)t.take(dmg,'physical',this);else if(t instanceof JungleCreep)t.hit(dmg,this);else t.damage(dmg,this);}
+    if(t){let dmg=180+this.atk*.8;if(t instanceof Hero&&t.hp/t.maxHp<.4)dmg*=1.3;damageTargetByHero(this,t,dmg,'physical');}
     state.screenShake=.08;tone(96,.10,'sawtooth',.04);
   }
   ult(){
     if(this.level<4||this.cool.ult>0||this.dead){if(this.level<4&&this.player)floatText(this.x,this.y-50,'ULTIMATE LOCKED','#dcb8e7',16);return;}
     const targets=units.filter(u=>u instanceof Hero&&!u.dead&&u.team!==this.team&&dist(this,u)<=600).sort((a,b)=>dist(this,a)-dist(this,b));
     const t=targets[0];if(!t){floatText(this.x,this.y-50,'NO HERO IN RANGE','#dcb8e7',14);return;}
-    this.cool.ult=45;this.targetMark={target:t,until:state.time+6};announce('DEADLINE',.75);addEffect('mark',t.x,t.y,{life:1.0,color:'#ca3f52',radius:74});
+    this.cool.ult=45;this.targetMark={target:t,until:state.time+6};if(this.player)announce('DEADLINE',.75);addEffect('mark',t.x,t.y,{life:1.0,color:'#ca3f52',radius:74});
     setTimeout(()=>{
       if(this.dead||t.dead)return;
       const d=dist(this,t);if(d>650)return;
@@ -273,21 +334,59 @@ class Hero extends Entity{
       addEffect('burst',t.x,t.y,{life:.48,color:'#d23d50',radius:125});state.screenShake=.18;tone(54,.24,'sawtooth',.055);
     },420);
   }
+  moveTowardPoint(p,stepScale=.10){
+    const base=Math.atan2(p.y-this.y,p.x-this.x),step=this.speed()*stepScale;
+    for(const off of [0,.38,-.38,.75,-.75,1.12,-1.12,Math.PI]){
+      const a=base+off,nx=clamp(this.x+Math.cos(a)*step,45,WORLD_W-45),ny=clamp(this.y+Math.sin(a)*step,45,WORLD_H-45);
+      if(!isBlocked(nx,ny)){this.facing=a;this.x=nx;this.y=ny;return true;}
+    }
+    return false;
+  }
   botAI(dt){
     this.botThink-=dt;if(this.botThink>0)return;this.botThink=.12;
-    const close=this.selectTarget(220,true);
+    // Retreat when critically low; fountain heals quickly.
+    if(this.hp/this.maxHp<.24||this.aiRetreat){
+      this.aiRetreat=this.hp/this.maxHp<.72&&dist(this,SPAWNS[this.team])>250;
+      const p=SPAWNS[this.team];this.moveTowardPoint(p,.12);return;
+    }
+    // Do not suicide into a protected enemy tower without an allied wave.
+    const dangerTower=towers.find(t=>!t.dead&&t.team!==this.team&&dist(this,t)<t.range+40&&t.backdoorAgainst(this.team));
+    if(dangerTower){this.moveTowardPoint({x:this.x+(this.x-dangerTower.x),y:this.y+(this.y-dangerTower.y)},.13);return;}
+    if(['EXP','GOLD','TACTICAL','SUPPORT'].includes(this.role)){
+      if(this.role==='SUPPORT'&&earlyEconomy())this.lane=2;
+      if(this.role==='TACTICAL')this.lane=(Math.floor(state.time/70)%2)+1;
+      const lp=this.team===TEAM_A?LANES[this.lane]:revPath(LANES[this.lane]);
+      const nearest=lp.reduce((best,q)=>dist(this,q)<dist(this,best)?q:best,lp[0]);
+      if(dist(this,nearest)>620){this.moveTowardPoint(nearest,.12);return;}
+    }
+    const close=this.selectTarget(235,true);
     if(close){
-      const d=dist(this,close);if(d>145){const n=norm(close.x-this.x,close.y-this.y);this.facing=Math.atan2(n.y,n.x);this.x+=n.x*this.speed()*.12;this.y+=n.y*this.speed()*.12;}
+      const d=dist(this,close);if(d>150){this.moveTowardPoint(close,.12);}
       else this.basicAttack();
-      if(close instanceof Hero&&this.level>=4&&this.cool.ult<=0&&Math.random()<.02)this.ult();
+      if(close instanceof Hero&&this.cool.s1<=0&&Math.random()<.08)this.s1();
+      if(close instanceof Hero&&d>120&&d<260&&this.cool.s3<=0&&Math.random()<.025)this.s3();
+      if(close instanceof Hero&&this.level>=4&&this.cool.ult<=0&&Math.random()<.015)this.ult();
       return;
     }
+    // Junglers clear their own jungle first. After Pitlord spawns, the Jungler/Roamer may rotate to it.
     if(this.role==='JUNGLE'){
-      const live=camps.map(c=>c.creeps.find(x=>!x.dead)).find(Boolean);
-      if(live){const n=norm(live.x-this.x,live.y-this.y);this.facing=Math.atan2(n.y,n.x);this.x+=n.x*this.speed()*.10;this.y+=n.y*this.speed()*.10;return;}
+      if(state.pitlord&&!state.pitlord.dead&&this.level>=4&&state.time>=210&&Math.random()<.25){
+        this.moveTowardPoint(state.pitlord,.10);return;
+      }
+      let live=camps.filter(c=>c.owner===this.team).flatMap(c=>c.creeps).filter(x=>!x.dead).sort((a,b)=>dist(this,a)-dist(this,b))[0];
+      if(!live)live=camps.flatMap(c=>c.creeps).filter(x=>!x.dead).sort((a,b)=>dist(this,a)-dist(this,b))[0];
+      if(live){const d=dist(this,live);if(d>150)this.moveTowardPoint(live,.10);else this.basicAttack();return;}
     }
+    // Tank/Support follows the Jungler during the role-economy phase, then rotates to the nearest ally/fight.
+    if(this.role==='ROAMER'&&earlyEconomy()){
+      const j=units.find(h=>h instanceof Hero&&!h.dead&&h.team===this.team&&h.role==='JUNGLE');
+      if(j&&dist(this,j)>150){this.moveTowardPoint(j,.10);return;}
+    }
+    if(this.role==='SUPPORT'&&earlyEconomy())this.lane=2;
+    // Tactical Mage is flexible; it alternates assistance lanes every ~70 seconds.
+    if(this.role==='TACTICAL')this.lane=(Math.floor(state.time/70)%2)+1;
     const path=this.team===TEAM_A?LANES[this.lane]:revPath(LANES[this.lane]);
-    const p=path[this.pathWp]||path[path.length-1];const n=norm(p.x-this.x,p.y-this.y);this.facing=Math.atan2(n.y,n.x);this.x+=n.x*this.speed()*.11;this.y+=n.y*this.speed()*.11;if(dist(this,p)<75)this.pathWp=Math.min(path.length-1,this.pathWp+1);
+    const p=path[this.pathWp]||path[path.length-1];this.moveTowardPoint(p,.11);if(dist(this,p)<75)this.pathWp=Math.min(path.length-1,this.pathWp+1);
   }
 }
 
@@ -295,9 +394,14 @@ class Minion extends Entity{
   constructor(team,lane,index){
     const path=team===TEAM_A?LANES[lane]:revPath(LANES[lane]), p=path[0];
     super(p.x+(index-1.5)*18,p.y+(index-1.5)*10,team);this.lane=lane;this.path=path;this.wp=1;this.r=index===3?15:13;
-    this.maxHp=index===3?480:390;this.hp=this.maxHp;this.atk=index===3?50:42;this.ms=94;this.cool=0;this.xpReward=index===3?70:45;this.goldReward=index===3?65:40;
-    if(state.pitBuffUntil[team]>state.time){this.maxHp*=1.15;this.hp=this.maxHp;this.atk*=1.15;}
+    this.maxHp=index===3?480:390;this.hp=this.maxHp;this.atk=index===3?50:42;this.ms=94;this.cool=0;
+    if(index<2){this.xpReward=45;this.goldReward=40;this.kind='melee';}
+    else if(index===2){this.xpReward=40;this.goldReward=35;this.kind='ranged';}
+    else if(lane===1){this.xpReward=70;this.goldReward=55;this.kind='exp';}
+    else {this.xpReward=45;this.goldReward=95;this.kind='gold';}
+    this.pitEmpowered=false;if(state.pitBuffUntil[team]>state.time){this.pitEmpowered=true;this.maxHp*=1.15;this.hp=this.maxHp;this.atk*=1.15;}
   }
+  hitByHero(raw,hero){if(!canHeroDamageMinion(hero))return;this.damage(raw,hero);}
   update(dt){
     if(this.dead)return;this.cool-=dt;
     const targets=[...units.filter(u=>u!==this&&!u.dead&&u.team!==this.team&&u.team!==NEUTRAL&&dist(this,u)<105),...towers.filter(t=>!t.dead&&t.team!==this.team&&dist(this,t)<112),...cores.filter(c=>!c.dead&&c.team!==this.team&&c.vulnerable()&&dist(this,c)<125)];
@@ -306,9 +410,19 @@ class Minion extends Entity{
   }
   die(src){
     this.dead=true;addEffect('burst',this.x,this.y,{life:.25,color:'#8c778f',radius:35});
-    const nearby=units.filter(u=>u instanceof Hero&&!u.dead&&u.team===src?.team&&dist(u,this)<300);
-    for(const h of nearby)h.gainXp(this.xpReward);
-    if(src instanceof Hero){src.gold+=this.goldReward;const eligible=nearby.filter(h=>h.role!=='ROAMER'&&h.role!=='SUPPORT');if(eligible.length>=2)src.gold+=10;}
+    const rewardTeam=src?.team;
+    if(rewardTeam===TEAM_A||rewardTeam===TEAM_B){
+      const nearby=units.filter(u=>u instanceof Hero&&!u.dead&&u.team===rewardTeam&&dist(u,this)<330);
+      if(earlyEconomy()){
+        const farmers=nearby.filter(isLaneFarmer);
+        for(const h of farmers)h.gainXp(this.xpReward); // duo lane XP is not split in the protected phase
+        for(const h of nearby.filter(isRoamerRole))h.gainXp(this.xpReward*.25); // support/tank companion XP
+        if(farmers.length){const share=this.goldReward/farmers.length;for(const h of farmers)h.gold+=share;}
+        if(src instanceof Hero&&isLaneFarmer(src)&&farmers.length>=2)src.gold+=10;
+      }else{
+        const n=Math.max(1,nearby.length);for(const h of nearby){h.gainXp(this.xpReward/n);h.gold+=this.goldReward/n;}
+      }
+    }
   }
 }
 
@@ -316,9 +430,10 @@ class JungleCreep extends Entity{
   constructor(camp,kind,index=0){
     super(camp.x+(index?34:-20),camp.y+(index?18:-10),NEUTRAL);this.camp=camp;this.kind=kind;this.index=index;this.r=kind==='buff'?25:kind==='brute'?22:18;
     this.maxHp=kind==='buff'?1500:kind==='brute'?1050:620;this.hp=this.maxHp;this.atk=kind==='buff'?95:kind==='brute'?78:55;this.def=12;this.cool=0;this.aggro=null;this.speed=125;
-    this.xpReward=kind==='buff'?220:kind==='brute'?150:90;this.goldReward=kind==='buff'?250:kind==='brute'?170:95;
+    this.xpReward=kind==='buff'?520:kind==='brute'?450:220;this.goldReward=kind==='buff'?250:kind==='brute'?180:90;
   }
   hit(raw,src){
+    if(src instanceof Hero&&!canHeroDamageJungle(src)){if(src.player)floatText(src.x,src.y-55,'JUNGLE PROTECTED UNTIL 5:00','#d8b45e',12);return;}
     const dmg=raw*100/(100+this.def);this.aggro=src instanceof Hero?src:this.aggro;this.damage(dmg,src);addEffect('hit',this.x,this.y,{life:.16,color:'#d8b2df',radius:this.r+14});
   }
   update(dt){
@@ -333,10 +448,15 @@ class JungleCreep extends Entity{
   }
   die(src){
     this.dead=true;addEffect('burst',this.x,this.y,{life:.45,color:this.camp.color,radius:70});
-    if(src instanceof Hero){src.gold+=this.goldReward;src.gainXp(this.xpReward);
+    if(src instanceof Hero){
+      if(!earlyEconomy()||src.role==='JUNGLE'){src.gold+=this.goldReward;src.gainXp(this.xpReward);}
+      if(earlyEconomy()&&src.role==='JUNGLE'){
+        const escorts=units.filter(h=>h instanceof Hero&&!h.dead&&h.team===src.team&&isRoamerRole(h)&&dist(h,this)<470);
+        for(const h of escorts)h.gainXp(this.xpReward*.25);
+      }
       if(this.kind==='buff'){
-        if(this.camp.buff==='crimson'){src.crimsonUntil=state.time+90;announce(src.player?'CRIMSON BUFF ACQUIRED':'CRIMSON CLAIMED',.7);}
-        if(this.camp.buff==='azure'){src.azureUntil=state.time+90;announce(src.player?'AZURE BUFF ACQUIRED':'AZURE CLAIMED',.7);}
+        if(this.camp.buff==='crimson'){src.crimsonUntil=state.time+90;if(src.player)announce('CRIMSON BUFF ACQUIRED',.7);}
+        if(this.camp.buff==='azure'){src.azureUntil=state.time+90;if(src.player)announce('AZURE BUFF ACQUIRED',.7);}
       }
     }
     if(this.camp.creeps.every(c=>c.dead))this.camp.respawnAt=state.time+50;
@@ -344,7 +464,7 @@ class JungleCreep extends Entity{
 }
 
 class JungleCamp{
-  constructor(x,y,label,kind='small',buff=null){this.x=x;this.y=y;this.label=label;this.kind=kind;this.buff=buff;this.respawnAt=0;this.creeps=[];this.color=buff==='crimson'?'#c93f50':buff==='azure'?'#2998d6':buff==='yellow'?'#f0d332':buff==='purple'?'#b54bd3':'#765682';this.spawn();}
+  constructor(x,y,label,kind='small',buff=null,owner=NEUTRAL){this.x=x;this.y=y;this.label=label;this.kind=kind;this.buff=buff;this.owner=owner;this.respawnAt=0;this.creeps=[];this.color=buff==='crimson'?'#c93f50':buff==='azure'?'#2998d6':buff==='yellow'?'#f0d332':buff==='purple'?'#b54bd3':'#765682';this.spawn();}
   spawn(){this.creeps=[];if(this.kind==='buff')this.creeps.push(new JungleCreep(this,'buff'));else if(this.kind==='brute')this.creeps.push(new JungleCreep(this,'brute'));else{this.creeps.push(new JungleCreep(this,'small',0),new JungleCreep(this,'small',1));}units.push(...this.creeps);this.respawnAt=0;}
   update(){if(this.respawnAt&&state.time>=this.respawnAt)this.spawn();}
 }
@@ -355,7 +475,7 @@ class Tower extends Entity{
   vulnerable(){return towers.filter(t=>t.team===this.team&&t.lane===this.lane&&t.slot<this.slot&&!t.dead).length===0;}
   enemyMinionInRange(attackingTeam){return units.some(u=>u instanceof Minion&&!u.dead&&u.team===attackingTeam&&dist(this,u)<this.range);}
   backdoorAgainst(attackerTeam){return !this.enemyMinionInRange(attackerTeam);}
-  hitByHero(raw,hero){if(!this.vulnerable()){floatText(this.x,this.y-60,'FORTIFIED','#d9b5ed',13);return;}const back=this.backdoorAgainst(hero.team);const dmg=raw*(back?.05:1);this.lastHitByEnemyAt=state.time;this.damage(dmg,hero);if(back){this.repairUntil=state.time+2;floatText(this.x,this.y-60,'95% BLOCKED','#d9b5ed',13);}}
+  hitByHero(raw,hero){if(!this.vulnerable()){floatText(this.x,this.y-60,'FORTIFIED','#d9b5ed',13);return;}const back=this.backdoorAgainst(hero.team);const dmg=raw*(back?.05:1);this.lastHitByEnemyAt=state.time;hero.towerDamage+=Math.max(0,Math.min(this.hp,dmg));this.damage(dmg,hero);if(back){this.repairUntil=state.time+2;floatText(this.x,this.y-60,'95% BLOCKED','#d9b5ed',13);}}
   hitByMinion(raw,min){if(!this.vulnerable())return;this.damage(raw,min);}
   update(dt){
     if(this.dead)return;this.cool-=dt;
@@ -369,24 +489,40 @@ class Tower extends Entity{
     this.dead=true;addEffect('burst',this.x,this.y,{life:.75,color:'#ae6a8b',radius:120});
     const denied=src instanceof Hero&&src.team===this.team;
     announce(denied?'DENIED! NOT A COIN FOR THEM.':'THEIR FORTRESS CRUMBLES',1.25);
-    if(!denied&&src instanceof Hero&&src.team!==this.team)src.gold+=350;
+    if(!denied&&src instanceof Hero&&src.team!==this.team){for(const h of units)if(h instanceof Hero&&h.team===src.team)h.gold+=100;src.gold+=250;}
   }
 }
 
 class Core extends Entity{
-  constructor(team,x,y){super(x,y,team);this.r=56;this.maxHp=18000;this.hp=this.maxHp;}
-  // The Core is protected by the FOUR Core Guard towers: G1/G2 from both lanes.
+  constructor(team,x,y){super(x,y,team);this.r=56;this.maxHp=22000;this.hp=this.maxHp;this.range=340;this.baseDmg=520;this.cool=0;this.fury=new Map();this.repairUntil=0;}
   vulnerable(){return towers.filter(t=>t.team===this.team&&t.slot>=3&&!t.dead).length===0;}
-  hitByHero(raw,hero){if(!this.vulnerable()){floatText(this.x,this.y-82,'CORE SHIELDED','#d9b5ed',14);return;}this.damage(raw,hero);}
+  enemyMinionInRange(attackingTeam){return units.some(u=>u instanceof Minion&&!u.dead&&u.team===attackingTeam&&dist(this,u)<this.range);}
+  backdoorAgainst(attackerTeam){return !this.enemyMinionInRange(attackerTeam);}
+  hitByHero(raw,hero){
+    if(!this.vulnerable()){floatText(this.x,this.y-82,'CORE SHIELDED','#d9b5ed',14);return;}
+    const back=this.backdoorAgainst(hero.team),dmg=raw*(back?.05:1);hero.towerDamage+=Math.max(0,Math.min(this.hp,dmg));this.damage(dmg,hero);
+    if(back){this.repairUntil=state.time+2;floatText(this.x,this.y-82,'CORE RIFT WARD · 95%','#d9b5ed',13);}
+  }
   hitByMinion(raw,min){if(!this.vulnerable())return;this.damage(raw,min);}
-  die(src){this.dead=true;addEffect('burst',this.x,this.y,{life:1.4,color:'#e1b2eb',radius:260});state.gameOver=true;announce(src?.team===player.team?'THE RIFT IS YOURS':'YOUR JOURNEY ENDS HERE',3.0);}
+  update(dt){
+    if(this.dead||!this.vulnerable())return;this.cool-=dt;if(this.repairUntil>state.time)this.hp=Math.min(this.maxHp,this.hp+this.maxHp*.012*dt);
+    const enemyMinions=units.filter(u=>u instanceof Minion&&!u.dead&&u.team!==this.team&&dist(this,u)<this.range);
+    const enemyHeroes=units.filter(u=>u instanceof Hero&&!u.dead&&u.team!==this.team&&dist(this,u)<this.range);
+    const target=(enemyMinions[0]||enemyHeroes[0]);if(!target||this.cool>0){if(!target)this.fury.clear();return;}
+    let mult=1,back=this.backdoorAgainst(target.team);if(back&&target instanceof Hero){mult=this.fury.get(target)||1;this.fury.set(target,Math.min(10,mult*2));}else this.fury.clear();
+    if(target instanceof Hero)target.take(this.baseDmg*mult,'physical',this);else target.damage(this.baseDmg,this);this.cool=.9;
+  }
+  die(src){this.dead=true;addEffect('burst',this.x,this.y,{life:1.4,color:'#e1b2eb',radius:260});state.gameOver=true;showResults(src?.team===player.team);}
 }
 
 class Pitlord extends Entity{
-  constructor(){super(PIT_POS.x,PIT_POS.y,NEUTRAL);this.r=62;this.maxHp=10000;this.hp=this.maxHp;this.atk=170;this.def=18;this.cool=0;this.aggro=null;}
+  constructor(){super(PIT_POS.x,PIT_POS.y,NEUTRAL);this.r=62;this.maxHp=14000;this.hp=this.maxHp;this.atk=190;this.def=20;this.cool=0;this.aggro=null;}
   hit(raw,src){const dmg=raw*100/(100+this.def);if(src instanceof Hero)this.aggro=src;this.damage(dmg,src);addEffect('hit',this.x,this.y,{life:.18,color:'#bd6fce',radius:76});}
-  update(dt){if(this.dead)return;this.cool-=dt;const target=this.aggro&&!this.aggro.dead&&dist(this,this.aggro)<420?this.aggro:units.filter(u=>u instanceof Hero&&!u.dead&&dist(this,u)<190)[0];if(target&&this.cool<=0){target.take(this.atk,'physical',this);this.cool=1.15;addEffect('burst',target.x,target.y,{life:.2,color:'#7a3a88',radius:50});}}
-  die(src){this.dead=true;addEffect('burst',this.x,this.y,{life:1.0,color:'#954aab',radius:190});if(src instanceof Hero){state.pitBuffUntil[src.team]=state.time+90;src.gold+=300;src.gainXp(250);announce('THE RIFT BOWS TO YOUR WILL',1.6);}}
+  update(dt){if(this.dead)return;this.cool-=dt;const target=this.aggro&&!this.aggro.dead&&dist(this,this.aggro)<440?this.aggro:units.filter(u=>u instanceof Hero&&!u.dead&&dist(this,u)<210)[0];if(target&&this.cool<=0){target.take(this.atk,'physical',this);this.cool=1.1;addEffect('burst',target.x,target.y,{life:.2,color:'#7a3a88',radius:50});}}
+  die(src){
+    this.dead=true;addEffect('burst',this.x,this.y,{life:1.0,color:'#954aab',radius:190});state.pitRespawnAt=state.time+180;
+    if(src instanceof Hero){state.pitBuffUntil[src.team]=state.time+90;state.pitKills[src.team]++;for(const h of units)if(h instanceof Hero&&!h.dead&&h.team===src.team){h.gold+=150;h.gainXp(120);h.pitlordParticipation++;}for(const m of units)if(m instanceof Minion&&!m.dead&&m.team===src.team&&!m.pitEmpowered){m.pitEmpowered=true;m.maxHp*=1.15;m.hp*=1.15;m.atk*=1.15;}src.gold+=300;src.gainXp(250);announce('THE RIFT BOWS TO YOUR WILL',1.6);}
+  }
 }
 
 function placeStructures(){
@@ -415,15 +551,15 @@ function placeStructures(){
 
 function placeCamps(){
   const data=[
-    // 8 yellow standard camps
-    [1700,7450,'Riftlings','small','yellow'],[2700,6500,'Riftlings','small','yellow'],[3400,7600,'Stonepack','brute','yellow'],[4050,6100,'Riftlings','small','yellow'],
-    [7900,2150,'Riftlings','small','yellow'],[6900,3100,'Riftlings','small','yellow'],[6200,1850,'Stonepack','brute','yellow'],[5550,3450,'Riftlings','small','yellow'],
+    // 8 yellow standard camps (4 per side)
+    [1700,7450,'Riftlings','small','yellow',TEAM_A],[2700,6500,'Riftlings','small','yellow',TEAM_A],[3500,7100,'Stonepack','brute','yellow',TEAM_A],[4050,6100,'Riftlings','small','yellow',TEAM_A],
+    [7600,2550,'Riftlings','small','yellow',TEAM_B],[6900,3100,'Riftlings','small','yellow',TEAM_B],[6200,1850,'Stonepack','brute','yellow',TEAM_B],[5550,3450,'Riftlings','small','yellow',TEAM_B],
     // 2 purple major camps
-    [3550,5050,'Umbral Warden','brute','purple'],[6050,4550,'Umbral Warden','brute','purple'],
+    [3550,5050,'Umbral Warden','brute','purple',TEAM_A],[6050,4550,'Umbral Warden','brute','purple',TEAM_B],
     // 2 blue utility/mana camps
-    [2450,5050,'Azure Guardian','buff','azure'],[7150,4550,'Azure Guardian','buff','azure'],
+    [2450,5050,'Azure Guardian','buff','azure',TEAM_A],[7150,4550,'Azure Guardian','buff','azure',TEAM_B],
     // 2 red offensive camps
-    [4200,6150,'Crimson Guardian','buff','crimson'],[5400,3450,'Crimson Guardian','buff','crimson']
+    [4200,6150,'Crimson Guardian','buff','crimson',TEAM_A],[5850,4100,'Crimson Guardian','buff','crimson',TEAM_B]
   ];
   for(const d of data)camps.push(new JungleCamp(...d));
 }
@@ -433,14 +569,14 @@ placeStructures();placeCamps();
 const player=new Hero(SPAWNS[0].x+80,SPAWNS[0].y-70,TEAM_A,'RAMZX',true,'EXP');units.push(player);
 const allyNames=[['SERA','SUPPORT',1],['KAIRO','GOLD',2],['GRIMM','ROAMER',1],['VOLKRIN','JUNGLE',2]];
 for(let i=0;i<allyNames.length;i++){const [n,r,l]=allyNames[i];const h=new Hero(SPAWNS[0].x+40+i*26,SPAWNS[0].y-10+i*20,TEAM_A,n,false,r);h.lane=l;h.maxHp=r==='ROAMER'?3300:2600;h.hp=h.maxHp;h.aiMode=r;units.push(h);}
-const enemyNames=[['NYRA','JUNGLE',1],['VEYRA','TACTICAL',1],['KAELOR','EXP',1],['RAZE','GOLD',2],['SERA','SUPPORT',2]];
+const enemyNames=[['NYRA','JUNGLE',1],['VEYRA','TACTICAL',1],['KAELOR','EXP',1],['RAZE','GOLD',2],['GRIMM','ROAMER',2]];
 for(let i=0;i<enemyNames.length;i++){const [n,r,l]=enemyNames[i];const h=new Hero(SPAWNS[1].x-40-i*26,SPAWNS[1].y+10+i*20,TEAM_B,n,false,r);h.lane=l;h.maxHp=r==='SUPPORT'?2900:2550;h.hp=h.maxHp;units.push(h);}
 
 function spawnWave(){
   for(const team of [TEAM_A,TEAM_B])for(const lane of [1,2])for(let i=0;i<4;i++)units.push(new Minion(team,lane,i));
   tone(190,.04,'triangle',.012);
 }
-function spawnPitlord(debug=false){if(state.pitlord&&!state.pitlord.dead)return;state.pitlord=new Pitlord();announce(debug?'PITLORD SUMMONED':'THE RIFT TREMBLES… PITLORD HAS AWAKENED!',1.8);}
+function spawnPitlord(debug=false){if(state.pitlord&&!state.pitlord.dead)return;state.pitlord=new Pitlord();state.pitRespawnAt=0;announce(debug?'PITLORD SUMMONED':'THE RIFT TREMBLES… PITLORD HAS AWAKENED!',1.8);}
 
 const keys=new Set();
 addEventListener('keydown',e=>{
@@ -519,8 +655,11 @@ function updateCamera(){
 }
 function updateUI(){
   const mins=Math.floor(state.time/60),secs=Math.floor(state.time%60);
-  info.textContent=`${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} · ${player.role} · Lv ${player.level} · ${Math.floor(player.gold)}g`;
-  const remain=Math.max(0,210-state.time);pitBanner.textContent=state.pitlord?(state.pitlord.dead?'PITLORD: DEFEATED':(hasVisionAt(state.pitlord.x,state.pitlord.y,TEAM_A)?`PITLORD: ${Math.ceil(state.pitlord.hp)} HP`:'PITLORD: ALIVE')):`PITLORD: DORMANT · ${Math.floor(remain/60)}:${String(Math.ceil(remain%60)).padStart(2,'0')}`;
+  info.textContent=`${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')} · BLUE ${state.teamKills[0]}–${state.teamKills[1]} RED · ${earlyEconomy()?'ROLE ECONOMY':'OPEN ECONOMY'} · ${player.role} · Lv ${player.level} · ${Math.floor(player.gold)}g`;
+  const remain=Math.max(0,210-state.time);
+  if(state.pitlord&&!state.pitlord.dead)pitBanner.textContent=hasVisionAt(state.pitlord.x,state.pitlord.y,TEAM_A)?`PITLORD: ${Math.ceil(state.pitlord.hp)} HP`:'PITLORD: ALIVE';
+  else if(state.pitRespawnAt>state.time){const r=Math.ceil(state.pitRespawnAt-state.time);pitBanner.textContent=`PITLORD: RETURNS · ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`;}
+  else pitBanner.textContent=`PITLORD: DORMANT · ${Math.floor(remain/60)}:${String(Math.ceil(remain%60)).padStart(2,'0')}`;
   hpText.textContent=`${Math.ceil(player.hp)} / ${Math.ceil(player.maxHp)}`;hpFill.style.width=`${Math.max(0,player.hp/player.maxHp*100)}%`;shieldFill.style.width=`${Math.min(100,player.shield/player.maxHp*100)}%`;
   const buffs=[];if(player.crimsonUntil>state.time)buffs.push(`<span class="buff crimson">CRIMSON ${Math.ceil(player.crimsonUntil-state.time)}s</span>`);if(player.azureUntil>state.time)buffs.push(`<span class="buff azure">AZURE ${Math.ceil(player.azureUntil-state.time)}s</span>`);if(state.pitBuffUntil[player.team]>state.time)buffs.push(`<span class="buff pit">PITLORD ${Math.ceil(state.pitBuffUntil[player.team]-state.time)}s</span>`);buffBar.innerHTML=buffs.join('');
   for(const b of document.querySelectorAll('.skill[data-action]')){const a=b.dataset.action,cd=a==='attack'?player.cool.attack:(a==='deny'?0:player.cool[a]);b.classList.toggle('cooling',cd>0);b.classList.toggle('locked',a==='ult'&&player.level<4);b.dataset.cd=cd>0?Math.ceil(cd):'';}
@@ -530,14 +669,27 @@ function update(dt){
   if(state.gameOver)return;state.time+=dt;
   if(state.lastWave<0&&state.time>=.5){spawnWave();state.lastWave=.5;}else if(state.time-state.lastWave>=20){spawnWave();state.lastWave+=20;}
   if(!state.pitlord&&state.time>=210)spawnPitlord();
+  if(state.pitlord?.dead&&state.pitRespawnAt&&state.time>=state.pitRespawnAt)spawnPitlord();
+  if(!state.economyAnnounced&&state.time>=300){state.economyAnnounced=true;announce('THE RIFT OPENS. ALL FARM IS NOW UNBOUND.',1.8);}
   updatePlayer(dt);
   for(const u of [...units])u.update?.(dt);
   for(const t of towers)t.update(dt);
+  for(const c of cores)c.update(dt);
   for(const c of camps)c.update();
   state.pitlord?.update(dt);
   for(let i=units.length-1;i>=0;i--){const u=units[i];if(u.dead&&!(u instanceof Hero)&&!(u instanceof JungleCreep))units.splice(i,1);}
   updateEffects(dt);updateCamera();updateUI();
 }
+
+function showResults(victory){
+  if(state.resultsShown)return;state.resultsShown=true;
+  announce(victory?'THE RIFT IS YOURS':'YOUR JOURNEY ENDS HERE',2.2);
+  const panel=document.getElementById('resultPanel'),title=document.getElementById('resultTitle'),stats=document.getElementById('resultStats');
+  title.textContent=victory?'VICTORY':'DEFEAT';
+  stats.innerHTML=`<div><b>K / D / A</b><span>${player.kills} / ${player.deaths} / ${player.assists}</span></div><div><b>Gold</b><span>${Math.floor(player.gold)}</span></div><div><b>Hero Damage</b><span>${Math.floor(player.heroDamage)}</span></div><div><b>Tower Damage</b><span>${Math.floor(player.towerDamage)}</span></div><div><b>Damage Taken</b><span>${Math.floor(player.damageTaken)}</span></div><div><b>Pitlord Participation</b><span>${player.pitlordParticipation}</span></div><div><b>Team Score</b><span>${state.teamKills[0]} – ${state.teamKills[1]}</span></div>`;
+  panel.classList.add('show');
+}
+document.getElementById('restartBtn')?.addEventListener('click',()=>location.reload());
 
 function drawPath(path,color,width){
   ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();const a=screenPos(path[0].x,path[0].y);ctx.moveTo(a.x,a.y);for(const p of path.slice(1)){const s=screenPos(p.x,p.y);ctx.lineTo(s.x,s.y)}ctx.stroke();
@@ -583,11 +735,11 @@ function drawCamp(c){
 }
 function drawEntity(u){
   if(u.dead||!visibleToPlayer(u))return;const s=screenPos(u.x,u.y);if(s.x<-100||s.x>VIEW_W+100||s.y<-100||s.y>VIEW_H+100)return;
-  if(u instanceof Minion){ctx.beginPath();ctx.fillStyle=TEAM_COLORS[u.team];ctx.arc(s.x,s.y,u.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ffffff55';ctx.lineWidth=2;ctx.stroke();hpbar(u,34);return;}
+  if(u instanceof Minion){ctx.beginPath();ctx.fillStyle=TEAM_COLORS[u.team];ctx.arc(s.x,s.y,u.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=u.kind==='exp'?'#f0d65d':u.kind==='gold'?'#f3a54f':'#ffffff55';ctx.lineWidth=u.kind==='exp'||u.kind==='gold'?3:2;ctx.stroke();if(u.pitEmpowered){ctx.strokeStyle='#c95ee4';ctx.lineWidth=2;ctx.beginPath();ctx.arc(s.x,s.y,u.r+5,0,Math.PI*2);ctx.stroke();}hpbar(u,34);return;}
   if(u instanceof JungleCreep){ctx.beginPath();ctx.fillStyle=u.camp.color;ctx.arc(s.x,s.y,u.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e7d8eb88';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#fff';ctx.font='700 9px system-ui';ctx.textAlign='center';ctx.fillText(u.kind==='buff'?'BUFF':u.kind==='brute'?'BRUTE':'CREEP',s.x,s.y+3);ctx.textAlign='left';hpbar(u,48);return;}
   if(u instanceof Hero){
     ctx.save();ctx.translate(s.x,s.y);ctx.rotate(u.facing);ctx.beginPath();ctx.fillStyle=u.team===TEAM_A?'#7bd3ff':'#ff7b85';ctx.arc(0,0,u.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=u.player?'#fff':'#f5dfe855';ctx.lineWidth=u.player?4:2;ctx.stroke();ctx.fillStyle='#111';ctx.fillRect(7,-4,26,8);ctx.restore();
-    ctx.fillStyle='#fff';ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillText(`${u.name} · ${u.level}`,s.x,s.y+4);ctx.textAlign='left';hpbar(u,72);return;
+    ctx.fillStyle='#fff';ctx.font='900 11px system-ui';ctx.textAlign='center';ctx.fillText(`${u.name} · ${u.level} · ${u.role}`,s.x,s.y+4);ctx.textAlign='left';hpbar(u,72);return;
   }
 }
 function drawTower(t){

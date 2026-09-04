@@ -4,14 +4,14 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift — Prototype v0.4</title>
+  <title>Twisted Rift — Prototype v0.5 Core Loop</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <div id="shell">
   <header id="topbar">
-    <div class="brand">TWISTED RIFT <span>PROTOTYPE v0.4</span></div>
+    <div class="brand">TWISTED RIFT <span>PROTOTYPE v0.5 · CORE LOOP</span></div>
     <div id="matchInfo">00:00 · EXP · Lv 1 · 0g</div>
     <div class="topActions">
       <button id="levelBtn" title="Prototype test: instantly reach Level 4">TEST LV4</button>
@@ -31,6 +31,15 @@
       <div class="bar"><i id="hpFill"></i><b id="shieldFill"></b></div>
     </div>
 
+
+    <div id="resultPanel" aria-live="polite">
+      <div class="resultCard">
+        <div id="resultTitle">VICTORY</div>
+        <div id="resultStats"></div>
+        <button id="restartBtn">PLAY AGAIN</button>
+      </div>
+    </div>
+
     <div id="touchUI">
       <div id="joystick" class="joystick"><div id="stick"></div></div>
       <div id="skillPad">
@@ -45,7 +54,7 @@
   </main>
 
   <footer id="help">
-    WASD = move · Space/J = attack · 1/2/3/4 = skills · F = deny · P = Pitlord · L = Level 4 test · Drag minimap = scout · M = recenter
+    WASD = move · Space/J = attack · 1/2/3/4 = skills · F = deny · P = Pitlord · L = Level 4 test · Drag minimap = scout · M = recenter · 0:00–5:00 role economy
   </footer>
 </div>
 <script src="game.js"></script>
