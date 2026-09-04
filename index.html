@@ -3,41 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="theme-color" content="#100b16" />
-  <title>Twisted Rift — Prototype v0.1</title>
+  <meta name="theme-color" content="#09070d" />
+  <title>Twisted Rift — Prototype v0.2</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="shell">
-    <header id="topbar">
-      <div class="brand">TWISTED RIFT <span>v0.1</span></div>
-      <div id="matchInfo">00:00 · EXP · Lv 1 · 0g</div>
+<div id="shell">
+  <header id="topbar">
+    <div class="brand">TWISTED RIFT <span>PROTOTYPE v0.2</span></div>
+    <div id="matchInfo">00:00 · EXP · Lv 1 · 0g</div>
+    <div class="topActions">
+      <button id="levelBtn" title="Prototype test: instantly reach Level 4">TEST LV4</button>
+      <button id="pitBtn" title="Prototype test: spawn Pitlord">PITLORD</button>
       <button id="soundBtn" title="Toggle sound">🔊</button>
-    </header>
+    </div>
+  </header>
 
-    <main id="gameWrap">
-      <canvas id="game" width="1600" height="900" aria-label="Twisted Rift game prototype"></canvas>
-      <div id="announcement"></div>
-      <div id="pitlordBanner">PITLORD: DORMANT · 03:30</div>
+  <main id="gameWrap">
+    <canvas id="game" width="1280" height="720" aria-label="Twisted Rift prototype"></canvas>
+    <canvas id="minimap" width="220" height="140" aria-label="Minimap"></canvas>
+    <div id="announcement"></div>
+    <div id="pitlordBanner">PITLORD: DORMANT · 03:30</div>
+    <div id="buffBar"></div>
+    <div id="statusBar">
+      <div><strong>RAMZX</strong> <span id="hpText"></span></div>
+      <div class="bar"><i id="hpFill"></i><b id="shieldFill"></b></div>
+    </div>
 
-      <div id="touchUI">
-        <div id="joystick" class="joystick"><div id="stick"></div></div>
-        <div id="skillPad">
-          <button class="skill utility" data-action="deny">DENY</button>
-          <button class="skill ult" data-action="ult">R</button>
-          <button class="skill" data-action="s3">E</button>
-          <button class="skill" data-action="s2">W</button>
-          <button class="skill" data-action="s1">Q</button>
-          <button class="skill attack" data-action="attack">ATTACK</button>
-        </div>
+    <div id="touchUI">
+      <div id="joystick" class="joystick"><div id="stick"></div></div>
+      <div id="skillPad">
+        <button class="skill utility" data-action="deny"><span>DENY</span></button>
+        <button class="skill ult" data-action="ult"><small>4</small><span>DEADLINE</span></button>
+        <button class="skill" data-action="s3"><small>3</small><span>STEP</span></button>
+        <button class="skill" data-action="s2"><small>2</small><span>ORDER</span></button>
+        <button class="skill" data-action="s1"><small>1</small><span>SEVER</span></button>
+        <button class="skill attack" data-action="attack"><span>ATTACK</span></button>
       </div>
-    </main>
+    </div>
+  </main>
 
-    <footer id="help">
-      Desktop: WASD move · J/Space attack · Q/W/E/R skills · F deny · P debug-spawn Pitlord
-    </footer>
-  </div>
-  <script src="game.js"></script>
+  <footer id="help">
+    WASD = move · Space/J = attack · 1/2/3/4 = skills · F = deny · P = Pitlord · L = Level 4 test
+  </footer>
+</div>
+<script src="game.js"></script>
 </body>
 </html>
