@@ -1,113 +1,141 @@
-# Twisted Rift — Prototype v0.5 Core Loop
+# Twisted Rift — Prototype v0.6 Heroes + Shop
 
 ## Purpose
-v0.5 keeps the **approved v0.4 map** and adds the first full-match gameplay loop. The goal is to test whether the roles, early economy, jungle, Pitlord, structures, bots, respawn, and win condition work together before hero/item polish.
+v0.6 keeps the approved large square battlefield and the v0.5 core loop, then moves into the next milestone: **the first 10 playable heroes and the original Twisted Rift item shop**.
 
-## Map kept from v0.4
+This is still a mechanics prototype. The hero shapes, VFX, shop cards, terrain, and animations are placeholders so the kits and economy can be tested before 3D production.
+
+## New in v0.6
+
+### Hero selection
+A hero-select screen now appears before the match. All 10 Version 1 heroes are selectable:
+
+1. **RAMZX — The Dread Marshal** · EXP
+2. **Nyra — Veil of Death** · Jungle
+3. **Kaelor — The Iron Revenant** · EXP
+4. **Veyra — Mistress of the Void** · Tactical Mage
+5. **Grimm — The Black Bastion** · Tank/Roamer
+6. **Sera — The Last Saint** · Tactical Support
+7. **Kairo — The Rift Ranger** · Gold
+8. **Raze — The Scarlet Outlaw** · Gold
+9. **Volkrin — Beast of the Rift** · Jungle
+10. **Zyrel — Storm Heretic** · Tactical Mage
+
+The selected hero becomes the player character. Allied bots automatically fill the other four team slots so the team still has EXP, Gold, Jungle, Roamer, and Tactical/Support coverage.
+
+### Individual hero kits
+Each hero now has its own prototype attributes, attack range, movement speed, basic-attack timing, Skill 1, Skill 2, Skill 3, and Ultimate.
+
+Examples:
+- RAMZX retains Sever, Iron Order, Execution Step, and Deadline.
+- Nyra has dashes, mist/slow control, silence assassination, and No Witness.
+- Grimm has a pull, defensive stance, close-range control, and None Shall Pass.
+- Sera can heal/shield allies and use Second Dawn for team sustain.
+- Kairo is a true long-range Gold-lane marksman with Final Caliber.
+- Veyra and Zyrel deal magic damage and have Tactical rotation/control tools.
+
+These are prototype interpretations of the hero kits. Exact damage, cooldowns, passives, and VFX remain balanceable.
+
+## Item Shop
+Press **B** or the **SHOP** button to open the Quartermaster shop.
+
+### Shop rules in this prototype
+- 6 equipment slots.
+- Items can be purchased anywhere for faster playtesting.
+- Only one Boots item can be equipped.
+- Bots automatically buy role-appropriate items when they can afford them.
+- Hunt-item monster-damage bonuses are only fully useful to the Jungler role.
+- Full component trees are not implemented yet; v0.6 purchases finished items directly.
+
+### 24 original Twisted Rift items
+
+**Weapons**
+- Dreadcleaver
+- Bloodfang Edge
+- Riftpiercer
+- Headsman's Oath
+
+**Arcana**
+- Voidglass Scepter
+- Ashen Codex
+- Witchfire Crown
+- Grimoire of Ruin
+
+**Armor**
+- Dreadplate
+- Runeguard Mantle
+- Thornbound Plate
+- Gravewarden Aegis
+
+**Relics**
+- Saint's Lantern
+- Oathkeeper Bell
+- Pilgrim's Sigil
+- Crown of Mercy
+
+**Hunt**
+- Beastfang
+- Bloodhunter Fang
+- Shadeclaw
+- Titan Hunter
+
+**Boots**
+- War Boots
+- Rune Boots
+- Arcane Steps
+- Berserker Greaves
+
+### Implemented item stat hooks
+The prototype supports Attack, Magic Power, HP, Physical Defense, Magic Defense, Movement Speed, Cooldown Reduction, Attack Speed, Physical/Magic Penetration, Lifesteal, healing amplification, jungle damage, execute-style damage, burn damage, thorns, and emergency low-HP shielding.
+
+## Systems carried forward
 - 9600 × 9600 square battlefield.
 - Blue base bottom-left; Red base top-right.
 - Respawn/fountain behind each Core.
-- Two perimeter lanes: Lane 1 wraps left/top; Lane 2 wraps bottom/right.
-- 8 towers per team: T1 + T2 + G1 + G2 on each lane.
-- Four Core Guard towers protect each Core.
-- Diagonal river with Pitlord at center.
-- 14 jungle camps and blocking jungle walls/choke points.
-- Fog of war and draggable minimap remain enabled.
+- Two perimeter lanes.
+- 8 towers per team, 4 per lane.
+- Four Core Guard towers protect the Core.
+- Diagonal river, Pitlord center, 14 jungle camps, walls/choke points.
+- Fog of war and draggable minimap.
+- 4 minions per wave; first spawn 0.5 sec; every 20 sec after.
+- 0:00–5:00 role economy.
+- Roamer/Support 10 Gold/sec early economy.
+- Jungler protected farming logic and fast Level 4 target.
+- Pitlord first spawn at 3:30 and 90-second siege buff.
+- 95% Backdoor Protection.
+- Rift Fury 1× → 2× → 4× → 8× → 10×.
+- Backdoor Repair only when a protected structure is attacked.
+- Tower denial at <=10% HP; successful denial gives enemy **0 tower Gold**.
+- Core shielding, Core attacks, death/respawn, Victory/Defeat and results.
 
-## v0.5 role system
-The prototype now runs the planned five-player compositions:
-- **EXP** — Lane 1 farming/level focus. RAMZX is the player-controlled EXP hero.
-- **GOLD** — Lane 2 farming/gold focus.
-- **JUNGLE** — jungle-only farming during the protected opening phase.
-- **ROAMER/TANK** — follows the Jungler early and uses the Roamer economy.
-- **TACTICAL** — flexible Mage lane helper, or **SUPPORT** using the same Roamer economy.
+## Controls
+- **WASD** — Move
+- **Space / J** — Basic Attack
+- **1 / Q** — Skill 1
+- **2** — Skill 2
+- **3 / E** — Skill 3
+- **4 / R** — Ultimate
+- **B** — Open / close Item Shop
+- **F** — Deny eligible allied tower
+- **M** — Recenter camera
+- **Drag minimap** — Scout map
 
-### 0:00–5:00 role economy
-- Jungler cannot farm/damage lane minions for normal farming purposes.
-- Non-Junglers cannot damage standard jungle creeps during the protected opening phase.
-- EXP / Gold / Tactical lane farmers receive their lane XP.
-- When two eligible farming heroes share a lane, base minion gold is shared and the last-hitting farmer receives **+10 bonus Gold**.
-- Tank/Support receive **10 Gold per second** plus roaming XP.
-- Tank/Support receive companion XP near allied jungle clears or lane waves, but no normal early lane/jungle farm gold.
-- Kill/assist participation gives combat XP to participating heroes. Early Roamer/Support assists pay more Gold.
-- At **5:00**, the game announces Open Economy and all heroes can farm normally.
+### Debug/playtest controls
+- **L** — Instantly reach Level 4
+- **G** — Add 5,000 Gold
+- **P** — Spawn Pitlord immediately
 
-## Lane wave math
-- 4 minions per wave.
-- First spawn at 0.5 seconds; respawn every 20 seconds.
-- **Lane 1 / EXP:** 200 XP + 170 base Gold per complete wave.
-- **Lane 2 / Gold:** 175 XP + 210 base Gold per complete wave.
-- Level 4 requirement remains 1800 XP in this prototype.
-
-## Jungle
-- 8 yellow standard camps.
-- 2 purple major camps.
-- 2 Azure utility/mana buff camps.
-- 2 Crimson offensive buff camps.
-- Prototype camp XP has been raised so a normal four-camp Jungler opening can reach Level 4 before the planned 2:50 benchmark; exact clear timing still needs playtesting.
-- Crimson: temporary attack boost.
-- Azure: faster cooldown recovery.
-- Camps respawn after 50 seconds.
-
-## Pitlord
-- First spawn: **3:30**.
-- Respawns: **3 minutes after death**.
-- Team receives Gold + XP when Pitlord dies.
-- Killer receives an additional reward.
-- 90-second siege buff:
-  - new minions gain +15% HP and +15% damage;
-  - heroes gain +10% structure damage;
-  - heroes gain +5% out-of-combat movement speed.
-
-## Structures / Core
-- Tower order per lane: T1 → T2 → G1 → G2.
-- 95% Backdoor Protection remains active without attacking minions.
-- Rift Fury tower shots escalate 1× → 2× → 4× → 8× → 10× while backdoor protection is active.
-- Backdoor Repair activates only when the protected structure is actually attacked.
-- Tower denial remains available at <=10% HP during a legitimate push. A denied tower gives the enemy **0 tower Gold**.
-- Core has 22,000 HP and is shielded until all four Core Guards are destroyed.
-- Core now attacks nearby enemies and has its own anti-backdoor Rift Ward.
-- Destroy the enemy Core to end the match.
-
-## Bots / combat loop
-- 5v5 teams now have role-based movement behavior.
-- Junglers seek camps and can rotate to Pitlord.
-- Tank/Roamer follows the Jungler during early role economy.
-- Support can assist the Gold lane while earning Roamer economy.
-- Tactical Mage can switch between the two lanes.
-- Bots retreat toward fountain when critically low.
-- Bots avoid diving protected towers without an allied minion wave.
-- Bots use basic attacks and prototype RAMZX-like combat actions as temporary placeholders until the individual hero kits are implemented.
-
-## Kills / respawn / results
-- Kill Gold, assist Gold, participation XP, First Blood, Shutdown, multi-kill and streak callouts are active in prototype form.
-- Respawn time scales upward with hero level and match time, capped at 50 seconds.
-- Heroes respawn at the fountain behind the Core.
-- Match end displays K/D/A, Gold, Hero Damage, Tower Damage, Damage Taken, Pitlord Participation, and team score.
-
-## Desktop controls
-- WASD — Move
-- Space / J — Basic attack
-- 1 / Q — Sever
-- 2 — Iron Order
-- 3 / E — Execution Step
-- 4 / R — DEADLINE
-- F — Deny eligible allied tower
-- P — Spawn Pitlord immediately (debug)
-- L — Level 4 immediately (debug)
-- M — Recenter camera
-- Drag minimap — Scout
-
-## What to playtest
-Please focus on:
-1. Whether EXP reaches Level 4 around ~2:50 with normal lane farming.
-2. Whether Jungler reaches Level 4 before 2:50 without being dramatically too early.
-3. Whether Tank/Support reach Level 4 around ~3:15.
-4. Gold lane Level 4 timing around the first Pitlord spawn.
-5. Whether 3:30 Pitlord creates useful lane-vs-objective decisions.
-6. Tower/Core durability and whether the match can naturally finish.
-7. Bot retreat, tower-diving, lane and jungle behavior.
-8. Whether 0:00–5:00 role restrictions feel strategic rather than annoying.
+## What to test
+1. Try several heroes and decide whether their attack range/speed feels appropriate.
+2. Test every hero's four skills and note which ones feel weak, confusing, or too strong.
+3. Test a Tank/Support, Jungler, Gold, EXP, and Tactical hero to make sure the early economy still behaves correctly.
+4. Use `G` to rapidly test item combinations.
+5. Check whether defensive items actually make heroes meaningfully harder to kill.
+6. Check whether Attack/Magic builds noticeably increase damage.
+7. Check whether Marksmen feel different from melee Fighters and Tanks.
+8. Check whether Mage/Support kits feel useful despite there being no traditional mid lane.
+9. Watch bot item builds and team composition.
+10. Continue reporting anything that feels wrong before art production begins.
 
 ## GitHub Pages
-Replace the old prototype files with all files in this folder and commit. The service worker cache is versioned for v0.5. If the browser still shows an older build, clear the site data once and reload.
+Replace all files from the previous prototype with the files in this folder and commit them. The service-worker cache is now `twistedrift-v0.6.0`. If the old build remains cached, clear the site's data once and reopen it.

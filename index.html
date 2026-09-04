@@ -4,16 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift — Prototype v0.5 Core Loop</title>
+  <title>Twisted Rift — Prototype v0.6 Heroes & Shop</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <div id="shell">
   <header id="topbar">
-    <div class="brand">TWISTED RIFT <span>PROTOTYPE v0.5 · CORE LOOP</span></div>
-    <div id="matchInfo">00:00 · EXP · Lv 1 · 0g</div>
+    <div class="brand">TWISTED RIFT <span>PROTOTYPE v0.6 · HEROES + SHOP</span></div>
+    <div id="matchInfo">SELECT A HERO TO BEGIN</div>
     <div class="topActions">
+      <button id="shopBtn" title="Open item shop">SHOP</button>
+      <button id="goldBtn" title="Prototype test: add 5000 gold">+5000g</button>
       <button id="levelBtn" title="Prototype test: instantly reach Level 4">TEST LV4</button>
       <button id="pitBtn" title="Prototype test: spawn Pitlord">PITLORD</button>
       <button id="soundBtn" title="Toggle sound">🔊</button>
@@ -27,10 +29,31 @@
     <div id="pitlordBanner">PITLORD: DORMANT · 03:30</div>
     <div id="buffBar"></div>
     <div id="statusBar">
-      <div><strong>RAMZX</strong> <span id="hpText"></span></div>
+      <div><strong id="heroName">RAMZX</strong> <span id="heroRole">EXP</span> <span id="hpText"></span></div>
       <div class="bar"><i id="hpFill"></i><b id="shieldFill"></b></div>
+      <div id="inventoryStrip"></div>
     </div>
 
+    <div id="heroSelectPanel" class="overlay show" aria-live="polite">
+      <div class="heroSelectCard">
+        <div class="eyebrow">TWISTED RIFT · VERSION 0.6</div>
+        <h1>CHOOSE YOUR HERO</h1>
+        <p>Select any of the first 10 heroes. Your allied bots will automatically fill the other four team slots.</p>
+        <div id="heroGrid"></div>
+      </div>
+    </div>
+
+    <div id="shopPanel" class="overlay sideOverlay" aria-live="polite">
+      <div class="shopCard">
+        <div class="shopHeader">
+          <div><div class="eyebrow">THE QUARTERMASTER</div><h2>ITEM SHOP</h2></div>
+          <div class="shopHeaderActions"><b id="shopGold">0g</b><button id="closeShopBtn">CLOSE</button></div>
+        </div>
+        <div id="shopFilters"></div>
+        <div id="shopItems"></div>
+        <div class="shopFooter"><span>6 equipment slots · buy anywhere in this prototype</span><span>Press <b>B</b> to open/close</span></div>
+      </div>
+    </div>
 
     <div id="resultPanel" aria-live="polite">
       <div class="resultCard">
@@ -44,17 +67,17 @@
       <div id="joystick" class="joystick"><div id="stick"></div></div>
       <div id="skillPad">
         <button class="skill utility" data-action="deny"><span>DENY</span></button>
-        <button class="skill ult" data-action="ult"><small>4</small><span>DEADLINE</span></button>
-        <button class="skill" data-action="s3"><small>3</small><span>STEP</span></button>
-        <button class="skill" data-action="s2"><small>2</small><span>ORDER</span></button>
-        <button class="skill" data-action="s1"><small>1</small><span>SEVER</span></button>
+        <button class="skill ult" data-action="ult"><small>4</small><span>ULTIMATE</span></button>
+        <button class="skill" data-action="s3"><small>3</small><span>SKILL 3</span></button>
+        <button class="skill" data-action="s2"><small>2</small><span>SKILL 2</span></button>
+        <button class="skill" data-action="s1"><small>1</small><span>SKILL 1</span></button>
         <button class="skill attack" data-action="attack"><span>ATTACK</span></button>
       </div>
     </div>
   </main>
 
   <footer id="help">
-    WASD = move · Space/J = attack · 1/2/3/4 = skills · F = deny · P = Pitlord · L = Level 4 test · Drag minimap = scout · M = recenter · 0:00–5:00 role economy
+    WASD = move · Space/J = attack · 1/2/3/4 = skills · B = shop · F = deny · P = Pitlord · L = Level 4 · G = +5000g · Drag minimap = scout
   </footer>
 </div>
 <script src="game.js"></script>

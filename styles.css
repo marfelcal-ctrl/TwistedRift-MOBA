@@ -32,7 +32,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media(max-width:820px){#help{display:none}.brand{font-size:12px}.brand span{display:none}#matchInfo{font-size:10px}.topActions #levelBtn,.topActions #pitBtn{display:none}#minimap{width:145px;height:145px;right:8px;top:8px}.joystick{width:112px;height:112px;left:18px;bottom:18px}#stick{left:34px;top:34px;width:44px;height:44px}#skillPad{transform:scale(.82);transform-origin:bottom right;right:8px;bottom:10px}#statusBar{bottom:6px;width:38vw}}
 @media(max-height:520px){#topbar{height:38px;min-height:38px}.brand{font-size:11px}#pitlordBanner{top:7px}.joystick{transform:scale(.86);transform-origin:bottom left}#skillPad{transform:scale(.76);transform-origin:bottom right}}
 
-/* v0.5 full-match result overlay */
+/* full-match result overlay */
 #resultPanel{position:absolute;inset:0;display:none;place-items:center;background:#050309d9;backdrop-filter:blur(5px);z-index:20;padding:20px}
 #resultPanel.show{display:grid}
 .resultCard{width:min(520px,92vw);background:linear-gradient(180deg,#24142f,#0d0912);border:1px solid #7c538c;border-radius:22px;padding:28px;box-shadow:0 25px 80px #000;text-align:center}
@@ -42,3 +42,26 @@ button{font:inherit;color:inherit;cursor:pointer}
 #resultStats span{color:#ead7f0;font-weight:900}
 #restartBtn{border:1px solid #aa72bd;background:#6e347f;border-radius:12px;padding:11px 20px;font-weight:950;letter-spacing:.07em}
 @media(max-width:620px){#resultStats{grid-template-columns:1fr}.resultCard{padding:20px}}
+
+/* v0.6 hero selection + item shop */
+.overlay{position:absolute;inset:0;display:none;z-index:30;background:#050309e8;backdrop-filter:blur(7px);padding:18px;overflow:auto}
+.overlay.show{display:grid;place-items:center}
+.eyebrow{font-size:10px;font-weight:950;letter-spacing:.16em;color:#b98bc8;text-transform:uppercase}
+.heroSelectCard{width:min(1040px,96vw);background:linear-gradient(180deg,#24142f,#0d0912 80%);border:1px solid #765088;border-radius:22px;padding:24px;box-shadow:0 28px 100px #000c}
+.heroSelectCard h1{margin:5px 0 5px;font-size:clamp(28px,5vw,54px);letter-spacing:.08em}.heroSelectCard>p{margin:0 0 18px;color:#c9becd;font-size:13px}
+#heroGrid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px}
+.heroCard{border:1px solid #4e3c58;background:linear-gradient(180deg,#1a1220,#100c14);border-radius:14px;padding:12px;text-align:left;min-height:132px;transition:.15s transform,.15s border-color,.15s background}
+.heroCard:hover{transform:translateY(-2px);border-color:#a971ba;background:linear-gradient(180deg,#271631,#130e18)}
+.heroCard .heroTop{display:flex;justify-content:space-between;gap:8px;align-items:center}.heroCard strong{font-size:15px;letter-spacing:.06em}.heroCard em{font-style:normal;font-size:9px;color:#d4b1df;border:1px solid #5f4669;border-radius:99px;padding:3px 6px}
+.heroCard .title{font-size:10px;color:#a89eac;margin-top:3px}.heroCard .stats{font-size:9px;color:#d6cadb;margin-top:10px;line-height:1.45}.heroCard .ultName{margin-top:9px;color:#d777e8;font-size:10px;font-weight:900}
+.sideOverlay{background:#0503099c;place-items:stretch end!important;padding:54px 12px 12px}
+.shopCard{width:min(720px,94vw);height:min(690px,calc(100vh - 80px));background:linear-gradient(180deg,#1d1325,#0c0911);border:1px solid #735083;border-radius:18px;padding:16px;display:flex;flex-direction:column;box-shadow:0 22px 80px #000d}
+.shopHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}.shopHeader h2{margin:2px 0 0;font-size:26px;letter-spacing:.07em}.shopHeaderActions{display:flex;align-items:center;gap:8px}.shopHeaderActions b{color:#e2c66d}.shopHeaderActions button,#shopFilters button{border:1px solid #513a5d;background:#201627;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:900}
+#shopFilters{display:flex;gap:6px;flex-wrap:wrap;margin:13px 0 11px}#shopFilters button.active{background:#6d397c;border-color:#b478c8}
+#shopItems{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-right:3px}
+.itemCard{border:1px solid #3f3047;background:#120d17;border-radius:12px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px}.itemCard h3{font-size:12px;margin:0 0 3px}.itemCard .itemCat{font-size:8px;color:#aa95b3;text-transform:uppercase;letter-spacing:.1em}.itemCard p{font-size:9px;color:#c8bdcc;margin:6px 0 0;line-height:1.35}.itemCard .cost{font-size:11px;color:#e2c66d;font-weight:950;text-align:right}.itemCard button{align-self:end;border:1px solid #7d5988;background:#563265;border-radius:8px;padding:6px 9px;font-size:9px;font-weight:950}.itemCard button:disabled{filter:grayscale(1);opacity:.45;cursor:not-allowed}
+.shopFooter{display:flex;justify-content:space-between;gap:10px;color:#928a97;font-size:9px;margin-top:9px}
+#inventoryStrip{display:flex;gap:4px;margin-top:5px;min-height:18px}.invItem{font-size:8px;padding:3px 5px;border-radius:6px;background:#211528;border:1px solid #4b3654;color:#d6c7da;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#heroRole{font-size:9px;color:#b99bc4;border:1px solid #4a3852;border-radius:99px;padding:2px 5px;margin-left:5px}
+@media(max-width:900px){#heroGrid{grid-template-columns:repeat(2,minmax(130px,1fr))}.heroSelectCard{padding:16px}#shopItems{grid-template-columns:1fr}.shopCard{height:calc(100vh - 58px)}.topActions #goldBtn{display:none}}
+@media(max-height:620px){.heroSelectCard{align-self:start}.heroCard{min-height:112px}.heroCard .stats{display:none}}
