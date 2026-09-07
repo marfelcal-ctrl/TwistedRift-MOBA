@@ -1,177 +1,68 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#09070d" />
+  <title>Twisted Rift 3D — Alpha 0.1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
 
-const canvas = document.querySelector('#game');
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x09090c);
-scene.fog = new THREE.FogExp2(0x09090c, 0.016);
+    <div id="topHud">
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.1</span></div>
+      <div id="objective">TRAINING GROUND · DEFEAT THE DUMMY</div>
+      <div id="fps">-- FPS</div>
+    </div>
 
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.15;
+    <div id="announcement" aria-live="polite"></div>
 
-const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 220);
-const clock = new THREE.Clock();
-let lastFpsUpdate = 0, fpsFrames = 0;
+    <div id="targetHud">
+      <strong id="targetName">NO TARGET</strong>
+      <div class="bar enemy"><i id="targetHpFill"></i></div>
+      <span id="targetHpText"></span>
+    </div>
 
-const ui = {
-  loading: document.querySelector('#loading'), loadingText: document.querySelector('#loadingText'),
-  announcement: document.querySelector('#announcement'), hpFill: document.querySelector('#hpFill'),
-  shieldFill: document.querySelector('#shieldFill'), hpText: document.querySelector('#hpText'),
-  targetName: document.querySelector('#targetName'), targetHpFill: document.querySelector('#targetHpFill'),
-  targetHpText: document.querySelector('#targetHpText'), statusText: document.querySelector('#statusText'),
-  killsText: document.querySelector('#killsText'), fps: document.querySelector('#fps')
-};
+    <div id="playerHud">
+      <div class="portrait">R</div>
+      <div class="playerInfo">
+        <div class="line"><strong>RAMZX</strong><span>THE DREAD MARSHAL</span><b id="levelText">LV 1</b></div>
+        <div class="bar hp"><i id="hpFill"></i><b id="shieldFill"></b><span id="hpText"></span></div>
+        <div class="resourceLine"><span id="statusText">READY</span><span id="killsText">KILLS 0</span></div>
+      </div>
+    </div>
 
-// ---------- Lighting ----------
-scene.add(new THREE.HemisphereLight(0x9aa7c9, 0x171018, 1.25));
-const moon = new THREE.DirectionalLight(0xc7d2ff, 2.8);
-moon.position.set(-15, 26, 12); moon.castShadow = true;
-moon.shadow.mapSize.set(2048, 2048); moon.shadow.camera.left = -35; moon.shadow.camera.right = 35; moon.shadow.camera.top = 35; moon.shadow.camera.bottom = -35;
-scene.add(moon);
-const riftLight = new THREE.PointLight(0xb52d65, 35, 35, 2); riftLight.position.set(0, 4, 0); scene.add(riftLight);
+    <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · R reset camera</div>
 
-// ---------- Training arena ----------
-const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(34, 96),
-  new THREE.MeshStandardMaterial({ color: 0x18181c, roughness: 0.92, metalness: 0.08 })
-);
-ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+    <div id="touchUi">
+      <div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div>
+      <div id="skillPad">
+        <button class="skill ult" data-action="ult"><small>4</small><span>DEADLINE</span><em></em></button>
+        <button class="skill" data-action="s3"><small>3</small><span>STEP</span><em></em></button>
+        <button class="skill" data-action="s2"><small>2</small><span>ORDER</span><em></em></button>
+        <button class="skill" data-action="s1"><small>1</small><span>SEVER</span><em></em></button>
+        <button class="skill attack" data-action="attack"><span>ATTACK</span><em></em></button>
+      </div>
+    </div>
 
-const rift = new THREE.Mesh(
-  new THREE.RingGeometry(4.0, 4.45, 64),
-  new THREE.MeshStandardMaterial({ color: 0x4c163d, emissive: 0x5a0f35, emissiveIntensity: 2.3, roughness: 0.45 })
-);
-rift.rotation.x = -Math.PI/2; rift.position.y = 0.015; scene.add(rift);
+    <div id="loading" class="show">
+      <div class="loaderSigil">✦</div>
+      <h1>TWISTED RIFT</h1>
+      <p id="loadingText">Forging RAMZX into the Rift...</p>
+      <small>Using your uploaded GLB as the first 3D hero model.</small>
+    </div>
+  </div>
 
-for (let i=0;i<18;i++) {
-  const a = i/18*Math.PI*2;
-  const h = 2.2 + Math.random()*3.2;
-  const pillar = new THREE.Mesh(new THREE.CylinderGeometry(.38+.2*Math.random(), .55+.18*Math.random(), h, 6), new THREE.MeshStandardMaterial({color: i%2?0x242229:0x30272d, roughness:.9}));
-  pillar.position.set(Math.cos(a)*30, h/2, Math.sin(a)*30); pillar.rotation.y = a; pillar.castShadow = true; pillar.receiveShadow = true; scene.add(pillar);
-}
-
-function makeRuneStone(x,z,glow=0x7a254d){
-  const g=new THREE.Group();
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.4,.55,8),new THREE.MeshStandardMaterial({color:0x222027,roughness:.8})); base.position.y=.28;base.castShadow=true;base.receiveShadow=true;g.add(base);
-  const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(.7,0),new THREE.MeshStandardMaterial({color:glow,emissive:glow,emissiveIntensity:1.8,roughness:.25,metalness:.25})); crystal.position.y=1.25;crystal.castShadow=true;g.add(crystal);
-  g.position.set(x,0,z);scene.add(g);return g;
-}
-makeRuneStone(-13,-9,0x2462a8); makeRuneStone(13,9,0xa52b3b); makeRuneStone(-12,12,0x66369d); makeRuneStone(12,-12,0xb14b1f);
-
-// ---------- Actors ----------
-const actors = [];
-const player = {
-  group: new THREE.Group(), hp: 2200, maxHp: 2200, shield: 0, speed: 7.0,
-  attackRange: 3.1, attackDamage: 180, attackCd: 0.82, nextAttack: 0,
-  facing: new THREE.Vector3(0,0,-1), alive:true, kills:0, deadlineTarget:null, deadlineUntil:0
-};
-player.group.position.set(0,0,7); scene.add(player.group);
-
-const playerGlow = new THREE.Mesh(new THREE.RingGeometry(.75,1.0,40), new THREE.MeshBasicMaterial({color:0x9b2c4b,transparent:true,opacity:.55,side:THREE.DoubleSide}));
-playerGlow.rotation.x=-Math.PI/2;playerGlow.position.y=.03;player.group.add(playerGlow);
-
-function fitModelToHeight(root, targetHeight=2.5){
-  const box = new THREE.Box3().setFromObject(root); const size = box.getSize(new THREE.Vector3());
-  if(size.y>0){ const s=targetHeight/size.y; root.scale.setScalar(s); root.updateMatrixWorld(true); }
-  const box2 = new THREE.Box3().setFromObject(root); root.position.y -= box2.min.y;
-}
-
-const loader = new GLTFLoader();
-loader.load('./assets/ramzx_placeholder.glb', gltf => {
-  const model = gltf.scene;
-  model.traverse(o=>{ if(o.isMesh){ o.castShadow=true;o.receiveShadow=true; if(o.material){o.material.roughness=.72;o.material.metalness=.18;} } });
-  fitModelToHeight(model,2.55);
-  model.rotation.y=Math.PI;
-  player.group.add(model);
-  ui.loadingText.textContent='RAMZX has entered the Rift.';
-  setTimeout(()=>ui.loading.classList.remove('show'),450);
-}, undefined, err=>{
-  console.error(err);
-  ui.loadingText.textContent='GLB failed to load — using emergency RAMZX placeholder.';
-  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.55,1.35,6,12),new THREE.MeshStandardMaterial({color:0x3b3a42,metalness:.65,roughness:.4}));body.position.y=1.2;body.castShadow=true;player.group.add(body);
-  setTimeout(()=>ui.loading.classList.remove('show'),900);
-});
-
-function createEnemy(name, pos, color, maxHp, damage, speed=2.7, type='dummy'){
-  const g=new THREE.Group(); g.position.copy(pos); scene.add(g);
-  const shadow=new THREE.Mesh(new THREE.CircleGeometry(.8,24),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.35,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;g.add(shadow);
-  const body=new THREE.Mesh(type==='monster'?new THREE.IcosahedronGeometry(1.05,1):new THREE.CapsuleGeometry(.55,1.25,6,12),new THREE.MeshStandardMaterial({color,roughness:.55,metalness:.18,emissive:new THREE.Color(color).multiplyScalar(.12)}));body.position.y=1.25;body.castShadow=true;g.add(body);
-  if(type==='monster'){
-    body.scale.set(1.25,.9,1.4);
-    for(let i=0;i<4;i++){const spike=new THREE.Mesh(new THREE.ConeGeometry(.18,.8,5),new THREE.MeshStandardMaterial({color:0x542138,emissive:0x351022,emissiveIntensity:1.4}));spike.position.set((i-1.5)*.38,2.1,.1);spike.rotation.z=(i-1.5)*.18;g.add(spike);}
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
   }
-  const e={name,group:g,body,hp:maxHp,maxHp,damage,speed,attackRange:type==='monster'?2.2:2.6,attackCd:type==='monster'?1.35:1.15,nextAttack:0,alive:true,respawnAt:0,spawn:pos.clone(),type,slowUntil:0,mark:false};actors.push(e);return e;
-}
-const dummy=createEnemy('RIFT TRAINING DUMMY',new THREE.Vector3(7,0,1),0x7d2635,1500,85,2.35,'dummy');
-const monster=createEnemy('STONEBACK',new THREE.Vector3(-9,0,-7),0x5a5048,2200,110,1.9,'monster');
-
-// Tower
-const tower={group:new THREE.Group(),hp:4200,maxHp:4200,nextAttack:0,range:8.5};tower.group.position.set(14,0,-8);scene.add(tower.group);
-const towerBase=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.55,1.0,8),new THREE.MeshStandardMaterial({color:0x34242b,roughness:.7,metalness:.2}));towerBase.position.y=.5;towerBase.castShadow=true;tower.group.add(towerBase);
-const towerShaft=new THREE.Mesh(new THREE.CylinderGeometry(.55,.85,3.4,8),new THREE.MeshStandardMaterial({color:0x443039,metalness:.35,roughness:.58}));towerShaft.position.y=2.2;towerShaft.castShadow=true;tower.group.add(towerShaft);
-const towerCrystal=new THREE.Mesh(new THREE.OctahedronGeometry(.72),new THREE.MeshStandardMaterial({color:0xb22b44,emissive:0x8d1735,emissiveIntensity:3,roughness:.25}));towerCrystal.position.y=4.35;tower.group.add(towerCrystal);
-
-// ---------- Input ----------
-const keys = new Set(); let joystick={x:0,y:0,active:false};
-addEventListener('keydown',e=>{if(['KeyW','KeyA','KeyS','KeyD','Space','Digit1','Digit2','Digit3','Digit4','KeyR'].includes(e.code)) e.preventDefault();keys.add(e.code); if(e.repeat)return; if(e.code==='Space')attack(); if(e.code==='Digit1')skill1(); if(e.code==='Digit2')skill2(); if(e.code==='Digit3')skill3(); if(e.code==='Digit4')ultimate(); if(e.code==='KeyR')snapCamera();});
-addEventListener('keyup',e=>keys.delete(e.code));
-
-const joy=document.querySelector('#joystick'),stick=document.querySelector('#stick'); let joyPointer=null;
-function updateJoy(ev){const r=joy.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=ev.clientX-cx,dy=ev.clientY-cy;const max=r.width*.32;const len=Math.hypot(dx,dy)||1;if(len>max){dx*=max/len;dy*=max/len}joystick.x=dx/max;joystick.y=dy/max;stick.style.transform=`translate(${dx}px,${dy}px)`;}
-joy.addEventListener('pointerdown',e=>{joyPointer=e.pointerId;joy.setPointerCapture(e.pointerId);joystick.active=true;updateJoy(e)});
-joy.addEventListener('pointermove',e=>{if(e.pointerId===joyPointer)updateJoy(e)});
-function clearJoy(e){if(joyPointer===null||e.pointerId===joyPointer){joyPointer=null;joystick={x:0,y:0,active:false};stick.style.transform='translate(0,0)'}}
-joy.addEventListener('pointerup',clearJoy);joy.addEventListener('pointercancel',clearJoy);
-
-document.querySelectorAll('.skill').forEach(btn=>btn.addEventListener('pointerdown',e=>{e.preventDefault();const a=btn.dataset.action;if(a==='attack')attack();if(a==='s1')skill1();if(a==='s2')skill2();if(a==='s3')skill3();if(a==='ult')ultimate();}));
-
-// ---------- Combat & VFX ----------
-const cooldowns={attack:0,s1:0,s2:0,s3:0,ult:0}; const cdDur={attack:.82,s1:6.5,s2:11,s3:8,ult:32};
-function now(){return performance.now()/1000}
-function announce(text,ms=1100){ui.announcement.textContent=text;ui.announcement.classList.add('show');clearTimeout(announce.t);announce.t=setTimeout(()=>ui.announcement.classList.remove('show'),ms)}
-function nearestTarget(maxRange=Infinity){let best=null,bd=maxRange;for(const a of actors){if(!a.alive)continue;const d=player.group.position.distanceTo(a.group.position);if(d<bd){bd=d;best=a}}return best}
-function damageEnemy(e,dmg){if(!e||!e.alive)return; e.hp=Math.max(0,e.hp-dmg);hitFlash(e.body);floatText(`-${Math.round(dmg)}`,e.group.position,0xffa0a8); if(e.hp<=0)killEnemy(e)}
-function killEnemy(e){e.alive=false;e.group.visible=false;e.respawnAt=now()+5;player.kills++;ui.killsText.textContent=`KILLS ${player.kills}`;announce(e.type==='monster'?'STONEBACK SLAIN':'TARGET EXECUTED'); if(player.deadlineTarget===e){player.deadlineTarget=null;player.deadlineUntil=0}}
-function respawnEnemy(e){e.hp=e.maxHp;e.group.position.copy(e.spawn);e.group.visible=true;e.alive=true;e.mark=false}
-function damagePlayer(dmg){if(!player.alive)return;let left=dmg;if(player.shield>0){const s=Math.min(player.shield,left);player.shield-=s;left-=s}if(left>0)player.hp=Math.max(0,player.hp-left); if(player.hp<=0){player.alive=false;announce('RAMZX FALLS',1800);setTimeout(()=>{player.hp=player.maxHp;player.shield=0;player.group.position.set(0,0,7);player.alive=true;announce('RETURN TO WAR')},2500)}}
-function attack(){const t=now();if(t<cooldowns.attack||!player.alive)return;const e=nearestTarget(player.attackRange);cooldowns.attack=t+cdDur.attack;if(!e){announce('NO TARGET IN RANGE',650);swingVfx(player.group.position,player.facing,0x8e3550);return}player.group.lookAt(e.group.position.x,player.group.position.y,e.group.position.z);player.facing.copy(e.group.position).sub(player.group.position).setY(0).normalize();let dmg=player.attackDamage;if(player.deadlineTarget===e&&t<player.deadlineUntil){dmg+=520;player.deadlineTarget=null;player.deadlineUntil=0;announce('DEADLINE');if((e.hp-dmg)/e.maxHp<.15)dmg=e.hp+10}swingVfx(player.group.position,player.facing,0xc14964);damageEnemy(e,dmg)}
-function skill1(){const t=now();if(t<cooldowns.s1||!player.alive)return;cooldowns.s1=t+cdDur.s1;announce('SEVER');swingVfx(player.group.position,player.facing,0xdd375e,1.8);for(const e of actors){if(!e.alive)continue;const off=e.group.position.clone().sub(player.group.position);const d=off.length();if(d>4.1)continue;off.y=0;off.normalize();if(off.dot(player.facing)>.25){damageEnemy(e,310);e.slowUntil=t+1.5}}}
-function skill2(){const t=now();if(t<cooldowns.s2||!player.alive)return;cooldowns.s2=t+cdDur.s2;player.shield=Math.min(700,player.shield+430);announce('IRON ORDER');barrierVfx(player.group.position)}
-function skill3(){const t=now();if(t<cooldowns.s3||!player.alive)return;cooldowns.s3=t+cdDur.s3;announce('EXECUTION STEP');const start=player.group.position.clone();const end=start.clone().addScaledVector(player.facing,4.8);end.x=THREE.MathUtils.clamp(end.x,-31,31);end.z=THREE.MathUtils.clamp(end.z,-31,31);dashVfx(start,end);player.group.position.copy(end);for(const e of actors){if(e.alive&&e.group.position.distanceTo(end)<2.5)damageEnemy(e,250)} }
-function ultimate(){const t=now();if(t<cooldowns.ult||!player.alive)return;const e=nearestTarget(10);if(!e){announce('NO HERO TO MARK',700);return}cooldowns.ult=t+cdDur.ult;player.deadlineTarget=e;player.deadlineUntil=t+6;e.mark=true;announce('YOUR DEADLINE HAS COME',1500);markVfx(e.group)}
-
-function hitFlash(mesh){if(!mesh?.material)return;const old=mesh.material.emissive?.clone?.()||new THREE.Color(0);mesh.material.emissive=new THREE.Color(0xff445e);mesh.material.emissiveIntensity=2.3;setTimeout(()=>{if(mesh.material){mesh.material.emissive=old;mesh.material.emissiveIntensity=.35}},100)}
-function swingVfx(pos,dir,color,scale=1){const geo=new THREE.TorusGeometry(1.5*scale,.055*scale,6,40,Math.PI*1.1);const mat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.9,side:THREE.DoubleSide});const m=new THREE.Mesh(geo,mat);m.position.copy(pos).add(new THREE.Vector3(0,1.15,0)).addScaledVector(dir,.8);m.rotation.x=Math.PI/2;m.rotation.z=Math.atan2(dir.x,dir.z);scene.add(m);const st=now();effects.push({o:m,life:.32,update:(p)=>{m.scale.setScalar(1+p*.55);mat.opacity=1-p}})}
-function barrierVfx(pos){const geo=new THREE.SphereGeometry(1.5,20,12);const mat=new THREE.MeshBasicMaterial({color:0x7553e1,transparent:true,opacity:.25,wireframe:true});const m=new THREE.Mesh(geo,mat);m.position.copy(pos).add(new THREE.Vector3(0,1.25,0));scene.add(m);effects.push({o:m,life:2.8,update:p=>{m.rotation.y+=.04;mat.opacity=.28*(1-p)}})}
-function dashVfx(a,b){const pts=[a.clone().add(new THREE.Vector3(0,.15,0)),b.clone().add(new THREE.Vector3(0,.15,0))];const g=new THREE.BufferGeometry().setFromPoints(pts);const mat=new THREE.LineBasicMaterial({color:0xa93257,transparent:true,opacity:.8});const line=new THREE.Line(g,mat);scene.add(line);effects.push({o:line,life:.35,update:p=>mat.opacity=1-p})}
-function markVfx(group){const geo=new THREE.RingGeometry(.95,1.15,4);const mat=new THREE.MeshBasicMaterial({color:0xca1f45,transparent:true,opacity:.9,side:THREE.DoubleSide});const m=new THREE.Mesh(geo,mat);m.rotation.x=-Math.PI/2;m.position.y=.08;group.add(m);effects.push({o:m,life:6,update:p=>{m.rotation.z+=.035;mat.opacity=.9*(1-p*.45)}})}
-function floatText(text,pos,color){const c=document.createElement('canvas');c.width=256;c.height=96;const x=c.getContext('2d');x.font='700 44px Arial';x.textAlign='center';x.fillStyle='#'+color.toString(16).padStart(6,'0');x.shadowColor='#000';x.shadowBlur=8;x.fillText(text,128,58);const tex=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));s.scale.set(2.4,.9,1);s.position.copy(pos).add(new THREE.Vector3(0,2.9,0));scene.add(s);effects.push({o:s,life:.8,update:p=>{s.position.y+=.018;s.material.opacity=1-p}})}
-const effects=[];
-
-// Tower projectile
-function fireProjectile(from,to,color,damage){const orb=new THREE.Mesh(new THREE.SphereGeometry(.16,12,8),new THREE.MeshBasicMaterial({color}));orb.position.copy(from);scene.add(orb);effects.push({o:orb,life:1.2,update:(p,dt)=>{const target=to();const v=target.clone().sub(orb.position);const d=v.length();if(d<.35){damagePlayer(damage);orb.userData.dead=true;return}orb.position.addScaledVector(v.normalize(),dt*13)}})}
-
-// ---------- Camera ----------
-const cameraOffset=new THREE.Vector3(0,10.5,11.5);const cameraLookOffset=new THREE.Vector3(0,1.1,-2.1);
-function snapCamera(){camera.position.copy(player.group.position).add(cameraOffset);camera.lookAt(player.group.position.clone().add(cameraLookOffset))}
-snapCamera();
-
-// ---------- Update ----------
-function updatePlayer(dt){if(!player.alive)return;let x=0,z=0;if(keys.has('KeyA'))x-=1;if(keys.has('KeyD'))x+=1;if(keys.has('KeyW'))z-=1;if(keys.has('KeyS'))z+=1;if(joystick.active){x+=joystick.x;z+=joystick.y}const v=new THREE.Vector3(x,0,z);if(v.lengthSq()>.001){v.normalize();player.facing.lerp(v,.28).normalize();player.group.position.addScaledVector(v,player.speed*dt);player.group.position.x=THREE.MathUtils.clamp(player.group.position.x,-31,31);player.group.position.z=THREE.MathUtils.clamp(player.group.position.z,-31,31);const yaw=Math.atan2(v.x,v.z);player.group.rotation.y=yaw;}playerGlow.rotation.z+=dt*.55}
-function updateEnemies(dt,t){for(const e of actors){if(!e.alive){if(t>=e.respawnAt)respawnEnemy(e);continue}const d=e.group.position.distanceTo(player.group.position);if(player.alive&&d<8.5){const dir=player.group.position.clone().sub(e.group.position).setY(0);if(d>e.attackRange*0.88){dir.normalize();const slow=(t < (e.slowUntil || 0)) ? 0.55 : 1;e.group.position.addScaledVector(dir,e.speed*slow*dt);e.group.lookAt(player.group.position.x,e.group.position.y,player.group.position.z)}else if(t>=e.nextAttack){e.nextAttack=t+e.attackCd;damagePlayer(e.damage);hitFlash(player.group.children.find(c=>c.type==='Group')?.children?.[0]);}}
-  }}
-function updateTower(t){if(!player.alive)return;const d=tower.group.position.distanceTo(player.group.position);if(d<tower.range&&t>=tower.nextAttack){tower.nextAttack=t+1.25;const from=towerCrystal.getWorldPosition(new THREE.Vector3());fireProjectile(from,()=>player.group.position.clone().add(new THREE.Vector3(0,1.2,0)),0xff4967,165)}}
-function updateCamera(dt){const desired=player.group.position.clone().add(cameraOffset);camera.position.lerp(desired,1-Math.pow(.001,dt));const look=player.group.position.clone().add(cameraLookOffset);camera.lookAt(look)}
-function updateEffects(dt){for(let i=effects.length-1;i>=0;i--){const e=effects[i];e.life-=dt;const total=e.o.userData._total||(e.o.userData._total=e.life+dt);const p=1-Math.max(0,e.life)/total;e.update?.(p,dt);if(e.life<=0||e.o.userData.dead){e.o.parent?.remove(e.o);e.o.material?.map?.dispose?.();e.o.material?.dispose?.();e.o.geometry?.dispose?.();effects.splice(i,1)}}}
-function updateUi(t){ui.hpFill.style.width=`${100*player.hp/player.maxHp}%`;ui.shieldFill.style.width=`${Math.min(100,100*player.shield/player.maxHp)}%`;ui.hpText.textContent=`${Math.ceil(player.hp)} / ${player.maxHp}${player.shield>0?`  +${Math.ceil(player.shield)} SHIELD`:''}`;ui.statusText.textContent=player.deadlineTarget&&t<player.deadlineUntil?'DEADLINE ACTIVE':'READY';const n=nearestTarget(10);if(n){ui.targetName.textContent=n.name+(player.deadlineTarget===n&&t<player.deadlineUntil?' · MARKED':'');ui.targetHpFill.style.width=`${100*n.hp/n.maxHp}%`;ui.targetHpText.textContent=`${Math.ceil(n.hp)} / ${n.maxHp}`}else{ui.targetName.textContent='NO TARGET';ui.targetHpFill.style.width='0%';ui.targetHpText.textContent=''}
-  for(const [a,end] of Object.entries(cooldowns)){const btn=document.querySelector(`.skill[data-action="${a}"]`);if(!btn)continue;const left=Math.max(0,end-t);const dur=cdDur[a];btn.classList.toggle('cooling',left>0);btn.querySelector('em').style.height=`${100*left/dur}%`;const small=btn.querySelector('small');if(small&&left>0)small.textContent=left.toFixed(left<10?1:0);else if(small)small.textContent=a==='ult'?'4':a==='s3'?'3':a==='s2'?'2':'1';}
-}
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}addEventListener('resize',resize);resize();
-
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.033);const t=now();updatePlayer(dt);updateEnemies(dt,t);updateTower(t);updateCamera(dt);updateEffects(dt);updateUi(t);renderer.render(scene,camera);fpsFrames++;if(t-lastFpsUpdate>1){ui.fps.textContent=`${fpsFrames} FPS`;fpsFrames=0;lastFpsUpdate=t}}
-animate();
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
