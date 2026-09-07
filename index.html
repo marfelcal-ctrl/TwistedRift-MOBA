@@ -4,16 +4,21 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift 3D — Alpha 0.2 Visual Combat</title>
+  <title>Twisted Rift 3D — Alpha 0.2 MOBA Camera</title>
   <link rel="stylesheet" href="styles.css" />
+  <style>
+    #cameraLock{position:absolute;right:18px;top:82px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(9,9,14,.72);color:#f4f1ea;font-size:24px;line-height:1;display:grid;place-items:center;z-index:8;cursor:pointer;touch-action:manipulation}
+    #cameraLock:active{transform:scale(.94);background:rgba(70,28,48,.82)}
+    @media(max-width:800px){#cameraLock{top:64px;right:12px;width:42px;height:42px;font-size:21px}}
+  </style>
 </head>
 <body>
   <div id="app">
     <canvas id="game"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.2 · VISUAL COMBAT</span></div>
-      <div id="objective">TRAINING GROUND · TEST RAMZX COMBAT</div>
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.2 · MOBA CAMERA</span></div>
+      <div id="objective">TRAINING GROUND · MOBA CAMERA + COMBAT TEST</div>
       <div id="fps">-- FPS</div>
     </div>
 
@@ -34,7 +39,9 @@
       </div>
     </div>
 
-    <div id="controlsHint">WASD move · Space attack · 1 Sever · 2 Iron Order · 3 Execution Step · 4 Deadline · R camera</div>
+    <div id="controlsHint">WASD move · Drag battlefield to pan · Hold/drag aimed skills · Space attack · 1/2/3/4 skills · R recenter</div>
+
+    <button id="cameraLock" type="button" aria-label="Recenter camera" title="Recenter camera">⌖</button>
 
     <div id="touchUi">
       <div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div>
@@ -50,8 +57,8 @@
     <div id="loading" class="show">
       <div class="loaderSigil">✦</div>
       <h1>TWISTED RIFT</h1>
-      <p id="loadingText">Forging articulated RAMZX...</p>
-      <small>Alpha 0.2 adds procedural character animation, weapon motion, enemies and combat VFX.</small>
+      <p id="loadingText">Forging strategic MOBA camera...</p>
+      <small>Perspective FOV 38° · yaw 45° · pitch about 55° · screen pan · skill aim panning.</small>
     </div>
   </div>
 
@@ -62,6 +69,6 @@
     }
   }
   </script>
-  <script type="module" src="game.js"></script>
+  <script type="module" src="bootstrap.js"></script>
 </body>
 </html>
