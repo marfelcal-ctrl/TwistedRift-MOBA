@@ -1,67 +1,38 @@
-:root{
-  color-scheme:dark;
-  --bg:#08070b;--panel:#15101d;--ink:#f7f1fa;--muted:#b6aebe;
-  --accent:#9a52b5;--danger:#c64a57;--gold:#d8b45e;--blue:#66c9ff;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--ink)}
-button{font:inherit;color:inherit;cursor:pointer}
-#shell{height:100%;display:flex;flex-direction:column}
-#topbar{height:46px;min-height:46px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;background:linear-gradient(90deg,#0e0a13,#24162f,#0e0a13);border-bottom:1px solid #40294c;z-index:10}
-.brand{font-weight:950;letter-spacing:.09em;white-space:nowrap}.brand span{font-size:10px;color:var(--muted);font-weight:700;margin-left:6px}
-#matchInfo{font-size:13px;color:#e5dbea;text-align:center;flex:1}
-.topActions{display:flex;gap:6px;align-items:center}.topActions button{border:1px solid #4e3a58;background:#1e1725;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800}.topActions #soundBtn{font-size:17px;padding:2px 7px;background:transparent;border:0}
-#gameWrap{position:relative;flex:1;min-height:0;background:#030205;overflow:hidden}
-#game{width:100%;height:100%;display:block;touch-action:none;background:#111017}
-#minimap{position:absolute;right:14px;top:14px;width:210px;height:210px;border:2px solid #8b6c9677;border-radius:12px;background:#0b0a0ddd;box-shadow:0 5px 20px #000a;pointer-events:auto;touch-action:none;cursor:crosshair;z-index:7}
-#announcement{pointer-events:none;position:absolute;left:50%;top:13%;transform:translateX(-50%);font-size:clamp(23px,4.5vw,54px);font-weight:1000;letter-spacing:.06em;text-align:center;text-shadow:0 3px 0 #000,0 0 20px #68277b;opacity:0;transition:opacity .16s;white-space:nowrap;z-index:4}
-#announcement.show{opacity:1}
-#pitlordBanner{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#0c0911e8;border:1px solid #634174;border-radius:12px;padding:7px 12px;font-size:12px;font-weight:850;letter-spacing:.05em;z-index:3}
-#buffBar{position:absolute;top:50px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:3}.buff{font-size:10px;font-weight:850;padding:5px 8px;border-radius:10px;background:#140f19dd;border:1px solid #594766}.buff.crimson{border-color:#a84a57}.buff.azure{border-color:#4d8bb8}.buff.pit{border-color:#9a52b5}
-#statusBar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);width:min(360px,42vw);background:#0d0a10d9;border:1px solid #46364e;border-radius:12px;padding:7px 10px;font-size:11px;pointer-events:none;z-index:2}.bar{height:9px;background:#2a1c24;border-radius:99px;overflow:hidden;position:relative;margin-top:5px}.bar i{display:block;height:100%;width:100%;background:#9e3c4a}.bar b{display:block;height:100%;position:absolute;left:0;top:0;background:#d7b6efaa;width:0}
-#help{height:28px;min-height:28px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px;background:#0d0a11;border-top:1px solid #261b2c}
-#touchUI{position:absolute;inset:0;pointer-events:none;z-index:5}
-.joystick{pointer-events:auto;position:absolute;left:3vw;bottom:4vh;width:132px;height:132px;border-radius:50%;background:#2d22334d;border:2px solid #9b83a766;touch-action:none;box-shadow:inset 0 0 24px #0008}
-#stick{position:absolute;left:40px;top:40px;width:50px;height:50px;border-radius:50%;background:#e6d4eea0;border:2px solid #fff7}
-#skillPad{position:absolute;right:2.5vw;bottom:3.5vh;width:330px;height:235px;pointer-events:none}
-.skill{pointer-events:auto;position:absolute;border-radius:50%;width:66px;height:66px;border:2px solid #fff3;background:#281832e8;box-shadow:0 4px 16px #000a,inset 0 0 14px #7e4a8b22;font-weight:900;touch-action:none;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.02}
-.skill small{font-size:10px;color:#c7b7cc}.skill span{font-size:10px}.skill:active{transform:scale(.94)}
-.skill.attack{width:90px;height:90px;right:0;bottom:0;background:#5b263ce8;border-color:#db6781aa}.skill.attack span{font-size:12px}
-.skill[data-action=s1]{right:100px;bottom:8px}.skill[data-action=s2]{right:70px;bottom:87px}.skill[data-action=s3]{right:145px;bottom:135px}.skill.ult{right:4px;bottom:132px;width:76px;height:76px;background:#5d286fe8;border-color:#c47bdaa8}.skill.utility{left:0;bottom:0;width:68px;height:68px;background:#3c2e1ee8;border-color:#d8b45e88}.skill.utility span{font-size:10px}
-.skill.cooling{filter:grayscale(.62) brightness(.58)}.skill.cooling::after{content:attr(data-cd);position:absolute;inset:0;display:grid;place-items:center;font-size:20px;text-shadow:0 2px 2px #000}.skill.locked{filter:grayscale(1) brightness(.42)}
-@media(max-width:820px){#help{display:none}.brand{font-size:12px}.brand span{display:none}#matchInfo{font-size:10px}.topActions #levelBtn,.topActions #pitBtn{display:none}#minimap{width:145px;height:145px;right:8px;top:8px}.joystick{width:112px;height:112px;left:18px;bottom:18px}#stick{left:34px;top:34px;width:44px;height:44px}#skillPad{transform:scale(.82);transform-origin:bottom right;right:8px;bottom:10px}#statusBar{bottom:6px;width:38vw}}
-@media(max-height:520px){#topbar{height:38px;min-height:38px}.brand{font-size:11px}#pitlordBanner{top:7px}.joystick{transform:scale(.86);transform-origin:bottom left}#skillPad{transform:scale(.76);transform-origin:bottom right}}
+# Twisted Rift 3D — Alpha 0.1
 
-/* full-match result overlay */
-#resultPanel{position:absolute;inset:0;display:none;place-items:center;background:#050309d9;backdrop-filter:blur(5px);z-index:20;padding:20px}
-#resultPanel.show{display:grid}
-.resultCard{width:min(520px,92vw);background:linear-gradient(180deg,#24142f,#0d0912);border:1px solid #7c538c;border-radius:22px;padding:28px;box-shadow:0 25px 80px #000;text-align:center}
-#resultTitle{font-size:clamp(38px,8vw,72px);font-weight:1000;letter-spacing:.1em;text-shadow:0 0 26px #7e3a95;margin-bottom:18px}
-#resultStats{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;margin:0 auto 22px}
-#resultStats>div{display:flex;justify-content:space-between;gap:14px;background:#130e18;border:1px solid #3e2e48;border-radius:10px;padding:9px 11px;font-size:12px}
-#resultStats span{color:#ead7f0;font-weight:900}
-#restartBtn{border:1px solid #aa72bd;background:#6e347f;border-radius:12px;padding:11px 20px;font-weight:950;letter-spacing:.07em}
-@media(max-width:620px){#resultStats{grid-template-columns:1fr}.resultCard{padding:20px}}
+This is the first real 3D browser prototype using the uploaded `white_mesh.glb` as RAMZX's placeholder model.
 
-/* v0.6 hero selection + item shop */
-.overlay{position:absolute;inset:0;display:none;z-index:30;background:#050309e8;backdrop-filter:blur(7px);padding:18px;overflow:auto}
-.overlay.show{display:grid;place-items:center}
-.eyebrow{font-size:10px;font-weight:950;letter-spacing:.16em;color:#b98bc8;text-transform:uppercase}
-.heroSelectCard{width:min(1040px,96vw);background:linear-gradient(180deg,#24142f,#0d0912 80%);border:1px solid #765088;border-radius:22px;padding:24px;box-shadow:0 28px 100px #000c}
-.heroSelectCard h1{margin:5px 0 5px;font-size:clamp(28px,5vw,54px);letter-spacing:.08em}.heroSelectCard>p{margin:0 0 18px;color:#c9becd;font-size:13px}
-#heroGrid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px}
-.heroCard{border:1px solid #4e3c58;background:linear-gradient(180deg,#1a1220,#100c14);border-radius:14px;padding:12px;text-align:left;min-height:132px;transition:.15s transform,.15s border-color,.15s background}
-.heroCard:hover{transform:translateY(-2px);border-color:#a971ba;background:linear-gradient(180deg,#271631,#130e18)}
-.heroCard .heroTop{display:flex;justify-content:space-between;gap:8px;align-items:center}.heroCard strong{font-size:15px;letter-spacing:.06em}.heroCard em{font-style:normal;font-size:9px;color:#d4b1df;border:1px solid #5f4669;border-radius:99px;padding:3px 6px}
-.heroCard .title{font-size:10px;color:#a89eac;margin-top:3px}.heroCard .stats{font-size:9px;color:#d6cadb;margin-top:10px;line-height:1.45}.heroCard .ultName{margin-top:9px;color:#d777e8;font-size:10px;font-weight:900}
-.sideOverlay{background:#0503099c;place-items:stretch end!important;padding:54px 12px 12px}
-.shopCard{width:min(720px,94vw);height:min(690px,calc(100vh - 80px));background:linear-gradient(180deg,#1d1325,#0c0911);border:1px solid #735083;border-radius:18px;padding:16px;display:flex;flex-direction:column;box-shadow:0 22px 80px #000d}
-.shopHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}.shopHeader h2{margin:2px 0 0;font-size:26px;letter-spacing:.07em}.shopHeaderActions{display:flex;align-items:center;gap:8px}.shopHeaderActions b{color:#e2c66d}.shopHeaderActions button,#shopFilters button{border:1px solid #513a5d;background:#201627;border-radius:8px;padding:7px 10px;font-size:10px;font-weight:900}
-#shopFilters{display:flex;gap:6px;flex-wrap:wrap;margin:13px 0 11px}#shopFilters button.active{background:#6d397c;border-color:#b478c8}
-#shopItems{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding-right:3px}
-.itemCard{border:1px solid #3f3047;background:#120d17;border-radius:12px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:8px}.itemCard h3{font-size:12px;margin:0 0 3px}.itemCard .itemCat{font-size:8px;color:#aa95b3;text-transform:uppercase;letter-spacing:.1em}.itemCard p{font-size:9px;color:#c8bdcc;margin:6px 0 0;line-height:1.35}.itemCard .cost{font-size:11px;color:#e2c66d;font-weight:950;text-align:right}.itemCard button{align-self:end;border:1px solid #7d5988;background:#563265;border-radius:8px;padding:6px 9px;font-size:9px;font-weight:950}.itemCard button:disabled{filter:grayscale(1);opacity:.45;cursor:not-allowed}
-.shopFooter{display:flex;justify-content:space-between;gap:10px;color:#928a97;font-size:9px;margin-top:9px}
-#inventoryStrip{display:flex;gap:4px;margin-top:5px;min-height:18px}.invItem{font-size:8px;padding:3px 5px;border-radius:6px;background:#211528;border:1px solid #4b3654;color:#d6c7da;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#heroRole{font-size:9px;color:#b99bc4;border:1px solid #4a3852;border-radius:99px;padding:2px 5px;margin-left:5px}
-@media(max-width:900px){#heroGrid{grid-template-columns:repeat(2,minmax(130px,1fr))}.heroSelectCard{padding:16px}#shopItems{grid-template-columns:1fr}.shopCard{height:calc(100vh - 58px)}.topActions #goldBtn{display:none}}
-@media(max-height:620px){.heroSelectCard{align-self:start}.heroCard{min-height:112px}.heroCard .stats{display:none}}
+## Included
+- Real Three.js 3D scene
+- Your GLB loaded as RAMZX
+- Fixed ~45° MOBA-style hero-follow camera
+- WASD + touch joystick movement
+- Basic Attack
+- Skill 1: Sever
+- Skill 2: Iron Order (shield)
+- Skill 3: Execution Step (dash)
+- Ultimate: DEADLINE (mark + empowered next attack / execute)
+- Enemy training dummy
+- Stoneback jungle monster
+- Enemy training tower with projectiles
+- HP, shield, cooldowns, target HUD, kill counter
+- Mobile touch controls
+- Dark fantasy training arena and Rift VFX
+
+## Important
+Because the GLB and Three.js modules are loaded over HTTP, do **not** open `index.html` directly with `file://`.
+
+### Easiest test
+Upload the extracted folder to GitHub Pages, just like the earlier Twisted Rift prototypes.
+
+### Local test
+From the project folder, run any simple local web server, for example:
+
+```bash
+python -m http.server 8080
+```
+
+Then open `http://localhost:8080`.
+
+## Current limitation
+The uploaded GLB is a static mesh with no rig or animations, so Alpha 0.1 moves the whole model as a single object. When a rigged/animated GLB becomes available, it can replace this file without rebuilding the combat systems.

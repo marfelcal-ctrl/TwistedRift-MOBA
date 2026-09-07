@@ -1,141 +1,68 @@
-# Twisted Rift — Prototype v0.6 Heroes + Shop
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#09070d" />
+  <title>Twisted Rift 3D — Alpha 0.1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
 
-## Purpose
-v0.6 keeps the approved large square battlefield and the v0.5 core loop, then moves into the next milestone: **the first 10 playable heroes and the original Twisted Rift item shop**.
+    <div id="topHud">
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.1</span></div>
+      <div id="objective">TRAINING GROUND · DEFEAT THE DUMMY</div>
+      <div id="fps">-- FPS</div>
+    </div>
 
-This is still a mechanics prototype. The hero shapes, VFX, shop cards, terrain, and animations are placeholders so the kits and economy can be tested before 3D production.
+    <div id="announcement" aria-live="polite"></div>
 
-## New in v0.6
+    <div id="targetHud">
+      <strong id="targetName">NO TARGET</strong>
+      <div class="bar enemy"><i id="targetHpFill"></i></div>
+      <span id="targetHpText"></span>
+    </div>
 
-### Hero selection
-A hero-select screen now appears before the match. All 10 Version 1 heroes are selectable:
+    <div id="playerHud">
+      <div class="portrait">R</div>
+      <div class="playerInfo">
+        <div class="line"><strong>RAMZX</strong><span>THE DREAD MARSHAL</span><b id="levelText">LV 1</b></div>
+        <div class="bar hp"><i id="hpFill"></i><b id="shieldFill"></b><span id="hpText"></span></div>
+        <div class="resourceLine"><span id="statusText">READY</span><span id="killsText">KILLS 0</span></div>
+      </div>
+    </div>
 
-1. **RAMZX — The Dread Marshal** · EXP
-2. **Nyra — Veil of Death** · Jungle
-3. **Kaelor — The Iron Revenant** · EXP
-4. **Veyra — Mistress of the Void** · Tactical Mage
-5. **Grimm — The Black Bastion** · Tank/Roamer
-6. **Sera — The Last Saint** · Tactical Support
-7. **Kairo — The Rift Ranger** · Gold
-8. **Raze — The Scarlet Outlaw** · Gold
-9. **Volkrin — Beast of the Rift** · Jungle
-10. **Zyrel — Storm Heretic** · Tactical Mage
+    <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · R reset camera</div>
 
-The selected hero becomes the player character. Allied bots automatically fill the other four team slots so the team still has EXP, Gold, Jungle, Roamer, and Tactical/Support coverage.
+    <div id="touchUi">
+      <div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div>
+      <div id="skillPad">
+        <button class="skill ult" data-action="ult"><small>4</small><span>DEADLINE</span><em></em></button>
+        <button class="skill" data-action="s3"><small>3</small><span>STEP</span><em></em></button>
+        <button class="skill" data-action="s2"><small>2</small><span>ORDER</span><em></em></button>
+        <button class="skill" data-action="s1"><small>1</small><span>SEVER</span><em></em></button>
+        <button class="skill attack" data-action="attack"><span>ATTACK</span><em></em></button>
+      </div>
+    </div>
 
-### Individual hero kits
-Each hero now has its own prototype attributes, attack range, movement speed, basic-attack timing, Skill 1, Skill 2, Skill 3, and Ultimate.
+    <div id="loading" class="show">
+      <div class="loaderSigil">✦</div>
+      <h1>TWISTED RIFT</h1>
+      <p id="loadingText">Forging RAMZX into the Rift...</p>
+      <small>Using your uploaded GLB as the first 3D hero model.</small>
+    </div>
+  </div>
 
-Examples:
-- RAMZX retains Sever, Iron Order, Execution Step, and Deadline.
-- Nyra has dashes, mist/slow control, silence assassination, and No Witness.
-- Grimm has a pull, defensive stance, close-range control, and None Shall Pass.
-- Sera can heal/shield allies and use Second Dawn for team sustain.
-- Kairo is a true long-range Gold-lane marksman with Final Caliber.
-- Veyra and Zyrel deal magic damage and have Tactical rotation/control tools.
-
-These are prototype interpretations of the hero kits. Exact damage, cooldowns, passives, and VFX remain balanceable.
-
-## Item Shop
-Press **B** or the **SHOP** button to open the Quartermaster shop.
-
-### Shop rules in this prototype
-- 6 equipment slots.
-- Items can be purchased anywhere for faster playtesting.
-- Only one Boots item can be equipped.
-- Bots automatically buy role-appropriate items when they can afford them.
-- Hunt-item monster-damage bonuses are only fully useful to the Jungler role.
-- Full component trees are not implemented yet; v0.6 purchases finished items directly.
-
-### 24 original Twisted Rift items
-
-**Weapons**
-- Dreadcleaver
-- Bloodfang Edge
-- Riftpiercer
-- Headsman's Oath
-
-**Arcana**
-- Voidglass Scepter
-- Ashen Codex
-- Witchfire Crown
-- Grimoire of Ruin
-
-**Armor**
-- Dreadplate
-- Runeguard Mantle
-- Thornbound Plate
-- Gravewarden Aegis
-
-**Relics**
-- Saint's Lantern
-- Oathkeeper Bell
-- Pilgrim's Sigil
-- Crown of Mercy
-
-**Hunt**
-- Beastfang
-- Bloodhunter Fang
-- Shadeclaw
-- Titan Hunter
-
-**Boots**
-- War Boots
-- Rune Boots
-- Arcane Steps
-- Berserker Greaves
-
-### Implemented item stat hooks
-The prototype supports Attack, Magic Power, HP, Physical Defense, Magic Defense, Movement Speed, Cooldown Reduction, Attack Speed, Physical/Magic Penetration, Lifesteal, healing amplification, jungle damage, execute-style damage, burn damage, thorns, and emergency low-HP shielding.
-
-## Systems carried forward
-- 9600 × 9600 square battlefield.
-- Blue base bottom-left; Red base top-right.
-- Respawn/fountain behind each Core.
-- Two perimeter lanes.
-- 8 towers per team, 4 per lane.
-- Four Core Guard towers protect the Core.
-- Diagonal river, Pitlord center, 14 jungle camps, walls/choke points.
-- Fog of war and draggable minimap.
-- 4 minions per wave; first spawn 0.5 sec; every 20 sec after.
-- 0:00–5:00 role economy.
-- Roamer/Support 10 Gold/sec early economy.
-- Jungler protected farming logic and fast Level 4 target.
-- Pitlord first spawn at 3:30 and 90-second siege buff.
-- 95% Backdoor Protection.
-- Rift Fury 1× → 2× → 4× → 8× → 10×.
-- Backdoor Repair only when a protected structure is attacked.
-- Tower denial at <=10% HP; successful denial gives enemy **0 tower Gold**.
-- Core shielding, Core attacks, death/respawn, Victory/Defeat and results.
-
-## Controls
-- **WASD** — Move
-- **Space / J** — Basic Attack
-- **1 / Q** — Skill 1
-- **2** — Skill 2
-- **3 / E** — Skill 3
-- **4 / R** — Ultimate
-- **B** — Open / close Item Shop
-- **F** — Deny eligible allied tower
-- **M** — Recenter camera
-- **Drag minimap** — Scout map
-
-### Debug/playtest controls
-- **L** — Instantly reach Level 4
-- **G** — Add 5,000 Gold
-- **P** — Spawn Pitlord immediately
-
-## What to test
-1. Try several heroes and decide whether their attack range/speed feels appropriate.
-2. Test every hero's four skills and note which ones feel weak, confusing, or too strong.
-3. Test a Tank/Support, Jungler, Gold, EXP, and Tactical hero to make sure the early economy still behaves correctly.
-4. Use `G` to rapidly test item combinations.
-5. Check whether defensive items actually make heroes meaningfully harder to kill.
-6. Check whether Attack/Magic builds noticeably increase damage.
-7. Check whether Marksmen feel different from melee Fighters and Tanks.
-8. Check whether Mage/Support kits feel useful despite there being no traditional mid lane.
-9. Watch bot item builds and team composition.
-10. Continue reporting anything that feels wrong before art production begins.
-
-## GitHub Pages
-Replace all files from the previous prototype with the files in this folder and commit them. The service-worker cache is now `twistedrift-v0.6.0`. If the old build remains cached, clear the site's data once and reopen it.
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
