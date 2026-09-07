@@ -4,12 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift 3D — Alpha 0.2 MOBA Camera</title>
+  <title>Twisted Rift 3D — Alpha 0.3 Battlefield</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
     #cameraLock{position:absolute;right:18px;top:82px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(9,9,14,.72);color:#f4f1ea;font-size:24px;line-height:1;display:grid;place-items:center;z-index:8;cursor:pointer;touch-action:manipulation}
     #cameraLock:active{transform:scale(.94);background:rgba(70,28,48,.82)}
-    @media(max-width:800px){#cameraLock{top:64px;right:12px;width:42px;height:42px;font-size:21px}}
+    #minimapWrap{position:absolute;left:18px;top:78px;width:188px;height:188px;padding:6px;border:1px solid rgba(255,255,255,.16);background:rgba(7,9,13,.78);box-shadow:0 8px 28px rgba(0,0,0,.35);z-index:7;pointer-events:auto}
+    #minimap{width:100%;height:100%;display:block;background:#0c1015;touch-action:none;cursor:crosshair}
+    #minimapLabel{position:absolute;left:8px;right:8px;bottom:7px;text-align:center;font-size:8px;letter-spacing:.12em;color:#aaa3b4;text-shadow:0 1px 2px #000;pointer-events:none}
+    @media(max-width:800px){#cameraLock{top:64px;right:12px;width:42px;height:42px;font-size:21px}#minimapWrap{left:10px;top:56px;width:132px;height:132px;padding:4px}#minimapLabel{font-size:6px}}
   </style>
 </head>
 <body>
@@ -17,12 +20,17 @@
     <canvas id="game"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.2 · MOBA CAMERA</span></div>
-      <div id="objective">TRAINING GROUND · MOBA CAMERA + COMBAT TEST</div>
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.3 · BATTLEFIELD</span></div>
+      <div id="objective">EXPLORE THE FULL TWISTED RIFT MAP</div>
       <div id="fps">-- FPS</div>
     </div>
 
     <div id="announcement" aria-live="polite"></div>
+
+    <div id="minimapWrap">
+      <canvas id="minimap" width="220" height="220"></canvas>
+      <div id="minimapLabel">DRAG TO SCOUT · ⌖ TO RECENTER</div>
+    </div>
 
     <div id="targetHud">
       <strong id="targetName">NO TARGET</strong>
@@ -35,11 +43,11 @@
       <div class="playerInfo">
         <div class="line"><strong>RAMZX</strong><span>THE DREAD MARSHAL</span><b id="levelText">LV 1</b></div>
         <div class="bar hp"><i id="hpFill"></i><b id="shieldFill"></b><span id="hpText"></span></div>
-        <div class="resourceLine"><span id="statusText">READY</span><span id="killsText">KILLS 0</span></div>
+        <div class="resourceLine"><span id="statusText">MAP EXPLORATION</span><span id="killsText">KILLS 0</span></div>
       </div>
     </div>
 
-    <div id="controlsHint">WASD move · Drag battlefield to pan · Hold/drag aimed skills · Space attack · 1/2/3/4 skills · R recenter</div>
+    <div id="controlsHint">WASD move · Drag battlefield/minimap to scout · Space attack · 1 Sever · 2 Iron Order · 3 Execution Step · 4 Deadline · R recenter</div>
 
     <button id="cameraLock" type="button" aria-label="Recenter camera" title="Recenter camera">⌖</button>
 
@@ -57,8 +65,8 @@
     <div id="loading" class="show">
       <div class="loaderSigil">✦</div>
       <h1>TWISTED RIFT</h1>
-      <p id="loadingText">Forging strategic MOBA camera...</p>
-      <small>Perspective FOV 38° · yaw 45° · pitch about 55° · screen pan · skill aim panning.</small>
+      <p id="loadingText">Raising the battlefield...</p>
+      <small>Blue base bottom-left · Red base top-right · two lanes · diagonal river · jungle · 16 towers · 14 camps · Pitlord arena.</small>
     </div>
   </div>
 
@@ -69,6 +77,6 @@
     }
   }
   </script>
-  <script type="module" src="bootstrap.js"></script>
+  <script type="module" src="game.js"></script>
 </body>
 </html>
