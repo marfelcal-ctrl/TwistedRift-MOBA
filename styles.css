@@ -1,38 +1,19 @@
-# Twisted Rift 3D — Alpha 0.1
-
-This is the first real 3D browser prototype using the uploaded `white_mesh.glb` as RAMZX's placeholder model.
-
-## Included
-- Real Three.js 3D scene
-- Your GLB loaded as RAMZX
-- Fixed ~45° MOBA-style hero-follow camera
-- WASD + touch joystick movement
-- Basic Attack
-- Skill 1: Sever
-- Skill 2: Iron Order (shield)
-- Skill 3: Execution Step (dash)
-- Ultimate: DEADLINE (mark + empowered next attack / execute)
-- Enemy training dummy
-- Stoneback jungle monster
-- Enemy training tower with projectiles
-- HP, shield, cooldowns, target HUD, kill counter
-- Mobile touch controls
-- Dark fantasy training arena and Rift VFX
-
-## Important
-Because the GLB and Three.js modules are loaded over HTTP, do **not** open `index.html` directly with `file://`.
-
-### Easiest test
-Upload the extracted folder to GitHub Pages, just like the earlier Twisted Rift prototypes.
-
-### Local test
-From the project folder, run any simple local web server, for example:
-
-```bash
-python -m http.server 8080
-```
-
-Then open `http://localhost:8080`.
-
-## Current limitation
-The uploaded GLB is a static mesh with no rig or animations, so Alpha 0.1 moves the whole model as a single object. When a rigged/animated GLB becomes available, it can replace this file without rebuilding the combat systems.
+:root{
+  color-scheme:dark;
+  --bg:#07070a;--panel:rgba(8,8,13,.80);--border:rgba(255,255,255,.13);
+  --text:#f4f1ea;--muted:#9e99a8;--rift:#a21f3e;--rift2:#6b1b99;--hp:#b22c3e;--shield:#7e4ae5;
+}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);touch-action:none}
+button{font:inherit;color:inherit}#app,#game{position:absolute;inset:0;width:100%;height:100%}#game{display:block;outline:none}
+#topHud{position:absolute;top:max(10px,env(safe-area-inset-top));left:12px;right:12px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;pointer-events:none;text-shadow:0 1px 5px #000}
+.brand{font-family:Georgia,serif;letter-spacing:.09em;font-weight:800;font-size:18px}.brand span{display:block;color:var(--muted);font-family:inherit;font-size:9px;letter-spacing:.22em;margin-top:2px}
+#objective{justify-self:center;padding:7px 13px;border:1px solid var(--border);background:rgba(0,0,0,.35);font-size:11px;letter-spacing:.14em}#fps{justify-self:end;font-size:11px;color:var(--muted)}
+#announcement{position:absolute;top:17%;left:50%;transform:translateX(-50%);font-family:Georgia,serif;font-weight:900;font-size:clamp(20px,4vw,42px);letter-spacing:.08em;text-align:center;text-shadow:0 3px 18px #000;opacity:0;transition:opacity .18s;pointer-events:none}#announcement.show{opacity:1}
+#targetHud{position:absolute;top:70px;left:50%;transform:translateX(-50%);width:min(360px,52vw);text-align:center;pointer-events:none;opacity:.88}#targetHud strong{font-family:Georgia,serif;font-size:12px;letter-spacing:.12em}.bar{position:relative;height:18px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.55);overflow:hidden}.bar i,.bar b{position:absolute;inset:0 auto 0 0;width:100%;display:block;transition:width .15s}.bar.enemy{height:7px;margin-top:5px}.bar.enemy i{background:linear-gradient(90deg,#74202f,#c54455)}#targetHpText{font-size:10px;color:var(--muted)}
+#playerHud{position:absolute;left:18px;bottom:max(18px,env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;width:min(500px,48vw);pointer-events:none}.portrait{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#57202c,#0c0c12 70%);border:2px solid #8f5060;font:700 25px Georgia,serif}.playerInfo{flex:1;min-width:0}.line{display:flex;gap:8px;align-items:baseline}.line strong{font:800 15px Georgia,serif}.line span{font-size:9px;color:var(--muted);letter-spacing:.1em}.line b{margin-left:auto;font-size:10px}.bar.hp{height:17px;margin-top:4px}.bar.hp i{background:linear-gradient(90deg,#762536,#c3434f)}.bar.hp b{background:linear-gradient(90deg,rgba(92,59,201,.7),rgba(126,74,229,.8));width:0}.bar.hp span{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;text-shadow:0 1px 2px #000}.resourceLine{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px}
+#controlsHint{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);font-size:10px;color:#b8b1c1;pointer-events:none;white-space:nowrap}
+#touchUi{position:absolute;inset:0;pointer-events:none}#joystick{position:absolute;left:25px;bottom:92px;width:132px;height:132px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:radial-gradient(circle,rgba(255,255,255,.06),rgba(255,255,255,.018));pointer-events:auto;touch-action:none}#stick{position:absolute;left:41px;top:41px;width:50px;height:50px;border-radius:50%;background:rgba(220,216,226,.2);border:1px solid rgba(255,255,255,.25);transform:translate(0,0)}
+#skillPad{position:absolute;right:24px;bottom:38px;width:310px;height:220px;pointer-events:none}.skill{position:absolute;width:66px;height:66px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:radial-gradient(circle at 36% 30%,rgba(136,46,75,.7),rgba(17,12,19,.94) 63%);box-shadow:inset 0 0 0 4px rgba(0,0,0,.22);pointer-events:auto;cursor:pointer;touch-action:manipulation;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}.skill small{font-size:8px;color:#d7c9d0}.skill span{font-size:9px;font-weight:800;letter-spacing:.04em}.skill em{position:absolute;inset:auto 0 0;height:0;background:rgba(0,0,0,.68);pointer-events:none}.skill.cooling{filter:saturate(.35)}.skill.attack{width:84px;height:84px;right:0;bottom:0;background:radial-gradient(circle at 38% 30%,#8d3042,#1a1016 67%)}.skill[data-action="s1"]{right:88px;bottom:7px}.skill[data-action="s2"]{right:121px;bottom:78px}.skill[data-action="s3"]{right:66px;bottom:139px}.skill.ult{right:0;bottom:126px;width:76px;height:76px;background:radial-gradient(circle at 35% 30%,#6e256d,#150c19 70%)}
+#loading{position:absolute;inset:0;display:none;place-items:center;align-content:center;background:radial-gradient(circle at 50% 40%,#24131d 0,#09090d 45%,#050507 100%);z-index:20;text-align:center;padding:30px}#loading.show{display:grid}.loaderSigil{font-size:54px;color:#bb3c5b;animation:pulse 1.3s ease-in-out infinite}#loading h1{font-family:Georgia,serif;letter-spacing:.16em;margin:8px 0 6px}#loading p{margin:0;color:#ddd3d8}#loading small{margin-top:8px;color:var(--muted)}@keyframes pulse{50%{transform:scale(1.15);opacity:.55}}
+@media (max-width:800px){#topHud{grid-template-columns:1fr auto}.brand{font-size:14px}#fps{display:none}#objective{font-size:9px}#playerHud{bottom:12px;width:62vw}.portrait{width:44px;height:44px}.line span{display:none}#controlsHint{display:none}#joystick{left:18px;bottom:88px;width:116px;height:116px}#stick{left:36px;top:36px;width:44px;height:44px}#skillPad{right:12px;bottom:18px;transform:scale(.86);transform-origin:bottom right}#targetHud{top:60px;width:58vw}}
+@media (hover:hover) and (pointer:fine){.skill:hover{border-color:rgba(255,255,255,.5);transform:scale(1.04)}}
