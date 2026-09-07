@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift 3D — Alpha 0.1</title>
+  <title>Twisted Rift 3D — Alpha 0.2 Visual Combat</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -12,8 +12,8 @@
     <canvas id="game"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.1</span></div>
-      <div id="objective">TRAINING GROUND · DEFEAT THE DUMMY</div>
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.2 · VISUAL COMBAT</span></div>
+      <div id="objective">TRAINING GROUND · TEST RAMZX COMBAT</div>
       <div id="fps">-- FPS</div>
     </div>
 
@@ -34,7 +34,7 @@
       </div>
     </div>
 
-    <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · R reset camera</div>
+    <div id="controlsHint">WASD move · Space attack · 1 Sever · 2 Iron Order · 3 Execution Step · 4 Deadline · R camera</div>
 
     <div id="touchUi">
       <div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div>
@@ -50,16 +50,15 @@
     <div id="loading" class="show">
       <div class="loaderSigil">✦</div>
       <h1>TWISTED RIFT</h1>
-      <p id="loadingText">Forging RAMZX into the Rift...</p>
-      <small>Using your uploaded GLB as the first 3D hero model.</small>
+      <p id="loadingText">Forging articulated RAMZX...</p>
+      <small>Alpha 0.2 adds procedural character animation, weapon motion, enemies and combat VFX.</small>
     </div>
   </div>
 
   <script type="importmap">
   {
     "imports": {
-      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
-      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
     }
   }
   </script>
