@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift 3D — Alpha 0.4 Match Systems</title>
+  <title>Twisted Rift 3D — Alpha 0.5 Progression & Economy</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
     #cameraLock{position:absolute;right:18px;top:82px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(9,9,14,.72);color:#f4f1ea;font-size:24px;line-height:1;display:grid;place-items:center;z-index:8;cursor:pointer;touch-action:manipulation}
@@ -16,7 +16,7 @@
     #matchHud span{padding:5px 8px;border:1px solid rgba(255,255,255,.14);background:rgba(4,6,10,.72);font-size:9px;letter-spacing:.08em;color:#d9d5df;white-space:nowrap}
     #matchTimer{font-weight:800;color:#fff!important;min-width:48px;text-align:center}
     .floatDamage{position:fixed;z-index:15;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;font-size:16px;text-shadow:0 2px 5px #000;transition:opacity .1s;}
-    #alphaNote{position:absolute;right:16px;top:138px;max-width:210px;padding:8px 10px;border:1px solid rgba(255,255,255,.12);background:rgba(6,7,11,.66);font-size:9px;line-height:1.45;color:#aaa5b3;z-index:6;pointer-events:none}
+    #alphaNote{position:absolute;right:16px;top:138px;max-width:230px;padding:8px 10px;border:1px solid rgba(255,255,255,.12);background:rgba(6,7,11,.66);font-size:9px;line-height:1.45;color:#aaa5b3;z-index:6;pointer-events:none}
     #alphaNote b{color:#f4f1ea}
     @media(max-width:800px){#cameraLock{top:64px;right:12px;width:42px;height:42px;font-size:21px}#minimapWrap{left:10px;top:56px;width:132px;height:132px;padding:4px}#minimapLabel{font-size:6px}#matchHud{top:34px;gap:3px}#matchHud span{font-size:7px;padding:4px 5px}#alphaNote{display:none}}
   </style>
@@ -26,8 +26,8 @@
     <canvas id="game"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.4 · MATCH SYSTEMS</span></div>
-      <div id="objective">PUSH THE LANES · BREAK THE RED CORE</div>
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.5 · PROGRESSION & ECONOMY</span></div>
+      <div id="objective">LEVEL UP · FARM · GEAR UP · BREAK THE RED CORE</div>
       <div id="fps">-- FPS</div>
     </div>
 
@@ -56,12 +56,12 @@
       <div class="playerInfo">
         <div class="line"><strong>RAMZX</strong><span>THE DREAD MARSHAL</span><b id="levelText">LV 1</b></div>
         <div class="bar hp"><i id="hpFill"></i><b id="shieldFill"></b><span id="hpText"></span></div>
-        <div class="resourceLine"><span id="statusText">ALPHA 0.4 MATCH TEST</span><span id="killsText">KILLS 0</span></div>
+        <div class="resourceLine"><span id="statusText">ALPHA 0.5 PROGRESSION TEST</span><span id="killsText">KILLS 0</span></div>
       </div>
     </div>
 
-    <div id="alphaNote"><b>ALPHA 0.4 TEST</b><br>Minion waves every 20s · 4 per lane · towers target minions first · jungle respawns · Pitlord spawns at 3:30. Press <b>P</b> on desktop to force Pitlord for testing.</div>
-    <div id="controlsHint">WASD move · Drag battlefield/minimap to scout · Space attack · 1 Sever · 2 Iron Order · 3 Execution Step · 4 Deadline · P force Pitlord · R recenter</div>
+    <div id="alphaNote"><b>ALPHA 0.5 TEST</b><br>XP + levels · minion last-hits · role economy · recall · fountain healing · 6-slot item shop. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
+    <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · V recall · B shop · G practice gold · P force Pitlord · R recenter</div>
     <button id="cameraLock" type="button" aria-label="Recenter camera" title="Recenter camera">⌖</button>
 
     <div id="touchUi">
@@ -78,14 +78,14 @@
     <div id="loading" class="show">
       <div class="loaderSigil">✦</div>
       <h1>TWISTED RIFT</h1>
-      <p id="loadingText">Calling the legions...</p>
-      <small>Alpha 0.4 adds minion waves, tower combat, jungle spawning, Pitlord and lane progression.</small>
+      <p id="loadingText">Preparing progression systems...</p>
+      <small>Alpha 0.5 adds XP, levels, last-hit economy, recall, fountain healing and the first real item shop.</small>
     </div>
   </div>
 
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
   </script>
-  <script type="module" src="alpha04_bootstrap.js"></script>
+  <script type="module" src="alpha05_bootstrap.js"></script>
 </body>
 </html>
