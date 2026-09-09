@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift 3D — Alpha 0.5 Progression & Economy</title>
+  <title>Twisted Rift 3D — Alpha 0.7 — Living Battlefield</title>
   <link rel="stylesheet" href="styles.css" />
   <style>
     #cameraLock{position:absolute;right:18px;top:82px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(9,9,14,.72);color:#f4f1ea;font-size:24px;line-height:1;display:grid;place-items:center;z-index:8;cursor:pointer;touch-action:manipulation}
@@ -26,7 +26,7 @@
     <canvas id="game"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.5 · PROGRESSION & ECONOMY</span></div>
+      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.7 · LIVING BATTLEFIELD</span></div>
       <div id="objective">LEVEL UP · FARM · GEAR UP · BREAK THE RED CORE</div>
       <div id="fps">-- FPS</div>
     </div>
@@ -56,12 +56,12 @@
       <div class="playerInfo">
         <div class="line"><strong>RAMZX</strong><span>THE DREAD MARSHAL</span><b id="levelText">LV 1</b></div>
         <div class="bar hp"><i id="hpFill"></i><b id="shieldFill"></b><span id="hpText"></span></div>
-        <div class="resourceLine"><span id="statusText">ALPHA 0.5 PROGRESSION TEST</span><span id="killsText">KILLS 0</span></div>
+        <div class="resourceLine"><span id="statusText">CHOOSE YOUR FIRST SKILL</span><span id="killsText">KILLS 0</span></div>
       </div>
     </div>
 
-    <div id="alphaNote"><b>ALPHA 0.5 TEST</b><br>XP + levels · minion last-hits · role economy · recall · fountain healing · 6-slot item shop. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
-    <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · V recall · B shop · G practice gold · P force Pitlord · R recenter</div>
+    <div id="alphaNote"><b>ALPHA 0.7 TEST</b><br>Choose skills or stats each level. Open <b>U · Upgrades</b>. Stats unlock at level 6; ultimate ranks unlock at levels 4, 6 and 9. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
+    <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · U upgrades · V recall · B shop · G practice gold · P force Pitlord · R recenter</div>
     <button id="cameraLock" type="button" aria-label="Recenter camera" title="Recenter camera">⌖</button>
 
     <div id="touchUi">
@@ -78,14 +78,14 @@
     <div id="loading" class="show">
       <div class="loaderSigil">✦</div>
       <h1>TWISTED RIFT</h1>
-      <p id="loadingText">Preparing progression systems...</p>
-      <small>Alpha 0.5 adds XP, levels, last-hit economy, recall, fountain healing and the first real item shop.</small>
+      <p id="loadingText">Preparing the 3D battlefield...</p>
+      <small>Choose your first skill. Gain one upgrade point each level; save or spend it on skills and stats.</small>
     </div>
   </div>
 
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
   </script>
-  <script type="module" src="alpha05_bootstrap.js"></script>
+  <script type="module" src="alpha05_bootstrap.js?version=alpha07"></script>
 </body>
 </html>

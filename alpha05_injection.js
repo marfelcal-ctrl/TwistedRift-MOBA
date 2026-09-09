@@ -53,7 +53,7 @@ function a05ToggleShop(){a05Shop.style.display=a05Shop.style.display==='block'?'
 document.querySelector('#a05ShopBtn').addEventListener('click',a05ToggleShop);
 
 function a05NextXp(){return player.level>=15?A05_XP_THRESHOLDS[14]:A05_XP_THRESHOLDS[player.level]}
-function a05GainXp(amount){if(player.level>=15)return;player.xp+=amount;let leveled=false;while(player.level<15&&player.xp>=A05_XP_THRESHOLDS[player.level]){player.level++;player.maxHp+=185;player.hp=Math.min(player.maxHp,player.hp+185);player.attackDamage+=7.5;leveled=true}if(leveled){announce(`LEVEL ${player.level}`,900);fxRing(player.group.position,0xd45ce8,.7,4.5,.45);a05ToastMsg(`LEVEL UP · ${player.level}`,'#e58bff')}const lv=document.querySelector('#levelText');if(lv)lv.textContent=`LV ${player.level}`}
+function a05GainXp(amount){if(player.level>=15)return;player.xp+=amount;let leveled=false;while(player.level<15&&player.xp>=A05_XP_THRESHOLDS[player.level]){player.level++;leveled=true}if(leveled){announce(`LEVEL ${player.level}`,900);fxRing(player.group.position,0xd45ce8,.7,4.5,.45);a05ToastMsg(`LEVEL UP · ${player.level}`,'#e58bff')}const lv=document.querySelector('#levelText');if(lv)lv.textContent=`LV ${player.level}`}
 
 // ----- replace legacy minion reward with proximity XP + last-hit economy -----
 const a04KillUnitBase=a04KillUnit;
@@ -92,12 +92,12 @@ function a05WrapCombat(fn,action){return function(...args){a05CancelRecall();a05
 attack=a05WrapCombat(attack,'attack');skill1=a05WrapCombat(skill1,'skill');skill2=(f=>function(...args){a05CancelRecall();return f(...args)})(skill2);skill3=a05WrapCombat(skill3,'skill');ultimate=(f=>function(...args){a05CancelRecall();return f(...args)})(ultimate);
 
 const a05HurtPlayerBase=hurtPlayer;
-hurtPlayer=function(dmg){if(dmg>0)a05CancelRecall('RECALL INTERRUPTED');return a05HurtPlayerBase(dmg)};
+hurtPlayer=function(dmg,type='physical'){if(dmg>0)a05CancelRecall('RECALL INTERRUPTED');const defense=type==='magical'?player.magicalDefense:player.physicalDefense;const reduced=player.upgrades?reduceDamage(dmg,defense||0,type):dmg;return a05HurtPlayerBase(reduced)};
 
 function a05StartRecall(){if(!player.alive||a05Recall)return;if(a05NearFountain()){a05ToastMsg('ALREADY AT FOUNTAIN');return}a05Recall=true;a05RecallEnd=now()+5;a05RecallStart.copy(player.group.position);a05RecallBar.style.display='block';announce('RECALLING…',600)}
 function a05FinishRecall(){a05Recall=false;a05RecallBar.style.display='none';player.group.position.copy(A05_FOUNTAIN);player.hp=player.maxHp;player.shield=0;panOffset.set(0,0,0);announce('RETURNED TO FOUNTAIN',800);a05ToastMsg('FOUNTAIN RESTORED YOU','#79e49d')}
 document.querySelector('#a05RecallBtn').addEventListener('click',a05StartRecall);
-addEventListener('keydown',e=>{if(e.repeat)return;if(e.code==='KeyV')a05StartRecall();if(e.code==='KeyB')a05ToggleShop();if(e.code==='KeyG'){player.gold+=1000;a05ToastMsg('+1000 PRACTICE GOLD');if(a05Shop.style.display==='block')a05RenderShop()}});
+addEventListener('keydown',e=>{if(e.target.closest?.('input,select,textarea'))return;if(e.repeat)return;if(e.code==='KeyV')a05StartRecall();if(e.code==='KeyB')a05ToggleShop();if(e.code==='KeyG'){player.gold+=1000;a05ToastMsg('+1000 PRACTICE GOLD');if(a05Shop.style.display==='block')a05RenderShop()}});
 
 const a04UpdateUiBase=updateUi;
 updateUi=function(t){a04UpdateUiBase(t);const mt=a04Time(t);const next=a05NextXp(),prev=A05_XP_THRESHOLDS[Math.max(0,player.level-1)],span=Math.max(1,next-prev),pct=player.level>=15?100:100*(player.xp-prev)/span;document.querySelector('#a05XpFill').style.width=`${THREE.MathUtils.clamp(pct,0,100)}%`;document.querySelector('#a05XpText').textContent=player.level>=15?'MAX LEVEL':`XP ${Math.floor(player.xp)} / ${next}`;document.querySelector('#a05Role').textContent=mt<300?'EXP LANER · EARLY ECONOMY':'EXP LANER · OPEN ECONOMY';ui.statusText.textContent=player.deadlineTarget&&t<player.deadlineUntil?'DEADLINE ACTIVE':a05Recall?'RECALLING':a04PitBuff.blue>mt?'PITLORD SIEGE BUFF':`LV ${player.level} · ${player.items.length}/6 ITEMS`};
