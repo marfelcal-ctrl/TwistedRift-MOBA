@@ -17,3 +17,10 @@ button{font:inherit;color:inherit}#app,#game{position:absolute;inset:0;width:100
 #loading{position:absolute;inset:0;display:none;place-items:center;align-content:center;background:radial-gradient(circle at 50% 40%,#24131d 0,#09090d 45%,#050507 100%);z-index:20;text-align:center;padding:30px}#loading.show{display:grid}.loaderSigil{font-size:54px;color:#bb3c5b;animation:pulse 1.3s ease-in-out infinite}#loading h1{font-family:Georgia,serif;letter-spacing:.16em;margin:8px 0 6px}#loading p{margin:0;color:#ddd3d8}#loading small{margin-top:8px;color:var(--muted)}@keyframes pulse{50%{transform:scale(1.15);opacity:.55}}
 @media (max-width:800px){#topHud{grid-template-columns:1fr auto}.brand{font-size:14px}#fps{display:none}#objective{font-size:9px}#playerHud{bottom:12px;width:62vw}.portrait{width:44px;height:44px}.line span{display:none}#controlsHint{display:none}#joystick{left:18px;bottom:88px;width:116px;height:116px}#stick{left:36px;top:36px;width:44px;height:44px}#skillPad{right:12px;bottom:18px;transform:scale(.86);transform-origin:bottom right}#targetHud{top:60px;width:58vw}}
 @media (hover:hover) and (pointer:fine){.skill:hover{border-color:rgba(255,255,255,.5);transform:scale(1.04)}}
+
+/* Graphics controls remain usable beside the camera control on narrow screens. */
+#graphicsControl{position:absolute;right:78px;top:87px;z-index:12;display:flex;align-items:center;gap:8px;padding:7px 9px;background:#101722ed;border:1px solid #61708480;border-radius:5px;font-size:12px;color:#cad4e3;pointer-events:auto}
+#graphicsQuality{background:#182330;color:#f0f5fa;border:1px solid #536579;border-radius:3px;padding:4px 6px;font:inherit;cursor:pointer;color-scheme:dark}
+#graphicsQuality:focus-visible{outline:2px solid #eed294;outline-offset:2px}
+@media(max-width:800px){#graphicsControl{top:65px;right:64px;gap:5px;padding:5px;font-size:11px}#graphicsQuality{padding:3px}}
+@media(max-width:480px){#graphicsControl{top:149px;right:12px;font-size:10px;gap:4px}}

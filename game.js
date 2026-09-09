@@ -61,12 +61,13 @@ for (let i = -56; i <= 56; i += 8) {
   for (const [x,z] of [[i,-59],[i,59],[-59,i],[59,i]]) {
     const h = 2.7 + Math.random() * 2.8;
     const p = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.55, h, 6), Math.random() > .5 ? materials.rock : materials.rock2);
-    p.position.set(x, h/2, z); p.rotation.y = Math.random() * Math.PI; p.castShadow = p.receiveShadow = true; scene.add(p);
+    p.position.set(x, h/2, z); p.rotation.y = Math.random() * Math.PI; p.castShadow = p.receiveShadow = true; p.userData.legacyTerrain=true; scene.add(p);
   }
 }
 
 function pathRibbon(points, width, material, y=.025) {
   const group = new THREE.Group();
+  group.userData.legacyTerrain=true;
   for (let i=0;i<points.length-1;i++) {
     const a = new THREE.Vector3(points[i][0], y, points[i][1]);
     const b = new THREE.Vector3(points[i+1][0], y, points[i+1][1]);
@@ -83,6 +84,7 @@ function runeDisc(x,z,color=0x78324e,scale=1) {
 }
 function rockCluster(x,z,s=1) {
   const g=new THREE.Group(); g.position.set(x,0,z);
+  g.userData.legacyTerrain=true;
   const n=2+Math.floor(Math.random()*3);
   for(let i=0;i<n;i++){
     const h=(1.6+Math.random()*2.4)*s, r=(.7+Math.random()*.85)*s;
@@ -101,7 +103,7 @@ const river = new THREE.Mesh(new THREE.PlaneGeometry(12, 170), materials.river);
 river.rotation.x=-Math.PI/2; river.rotation.z=Math.PI/4; river.position.y=.11; scene.add(river);
 for(let i=-60;i<=60;i+=12){
   const foam=new THREE.Mesh(new THREE.PlaneGeometry(.12,9),new THREE.MeshBasicMaterial({color:0x5a7384,transparent:true,opacity:.18,side:THREE.DoubleSide}));
-  foam.rotation.x=-Math.PI/2;foam.rotation.z=Math.PI/4;foam.position.set(i/Math.SQRT2,.13,i/Math.SQRT2);scene.add(foam);
+  foam.rotation.x=-Math.PI/2;foam.rotation.z=Math.PI/4;foam.position.set(i/Math.SQRT2,.13,i/Math.SQRT2);foam.userData.legacyTerrain=true;scene.add(foam);
 }
 
 const wallSpots = [
@@ -128,7 +130,7 @@ function buildFountain(team,x,z){
   const g=new THREE.Group();g.position.set(x,0,z);
   const pad=new THREE.Mesh(new THREE.CylinderGeometry(4.5,4.8,.5,32),new THREE.MeshStandardMaterial({color:team==='blue'?0x182a3d:0x3b1821,roughness:.65,metalness:.2}));pad.position.y=.25;g.add(pad);
   const ring=new THREE.Mesh(new THREE.RingGeometry(2.7,3.6,48),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.55,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.53;g.add(ring);
-  const light=new THREE.PointLight(c,28,18,2);light.position.y=3;g.add(light);scene.add(g);return g;
+  const light=new THREE.PointLight(c,28,18,2);light.position.y=3;g.add(light);g.userData.legacyTerrain=true;scene.add(g);return g;
 }
 const blueCore=buildCore('blue',-49,49), redCore=buildCore('red',49,-49);
 buildFountain('blue',-55,55); buildFountain('red',55,-55);
@@ -152,6 +154,7 @@ towerDefs.blue.forEach(d=>buildTower('blue',...d));towerDefs.red.forEach(d=>buil
 
 function guardObelisk(team,x,z){
   const g=new THREE.Group();g.position.set(x,0,z);const m=team==='blue'?materials.blueGlow:materials.redGlow;
+  g.userData.legacyTerrain=true;
   const p=new THREE.Mesh(new THREE.CylinderGeometry(.48,.8,2.8,6),materials.blackSteel);p.position.y=1.4;g.add(p);
   const c=new THREE.Mesh(new THREE.OctahedronGeometry(.38),m);c.position.y=3.1;g.add(c);scene.add(g);
 }
@@ -253,13 +256,13 @@ function nearest(range=Infinity){let best=null,d0=range;for(const e of enemies){
 function hurtEnemy(e,dmg){if(!e||!e.alive)return;e.hp=Math.max(0,e.hp-dmg);e.body.material.emissive?.setHex?.(0x70152b);e.body.material.emissiveIntensity=1.8;setTimeout(()=>{if(e.body.material)e.body.material.emissiveIntensity=0},90);fxBurst(e.group.position);if(e.hp<=0){e.alive=false;e.group.visible=false;e.respawnAt=now()+7;player.kills++;ui.killsText.textContent=`KILLS ${player.kills}`;announce(e.type==='stoneback'?'STONEBACK SLAIN':'TARGET EXECUTED',1200)}}
 function attack(){const t=now();if(t<cds.attack||!player.alive)return;cds.attack=t+dur.attack;player.attackAnim=1;const e=nearest(player.attackRange);fxSlash(player.group.position,player.facing);if(!e){announce('NO TARGET IN RANGE',450);return}player.facing.copy(e.group.position).sub(player.group.position).setY(0).normalize();let dmg=player.attackDamage;if(player.deadlineTarget===e&&t<player.deadlineUntil){dmg+=560;announce('DEADLINE',1100);fxRing(e.group.position,0xff284c,.8,6,.45);if(e.hp/e.maxHp<.25)dmg=e.hp+1;player.deadlineTarget=null;player.deadlineUntil=0}hurtEnemy(e,dmg)}
 function skill1(){const t=now();if(t<cds.s1||!player.alive)return;cds.s1=t+dur.s1;player.attackAnim=1;announce('SEVER');fxSlash(player.group.position,player.facing);fxRing(player.group.position,0xd93758,.8,4.8,.38);for(const e of enemies){if(!e.alive)continue;const off=e.group.position.clone().sub(player.group.position).setY(0),d=off.length();if(d<=4.8&&off.normalize().dot(player.facing)>.05)hurtEnemy(e,330)}}
-function skill2(){const t=now();if(t<cds.s2||!player.alive)return;cds.s2=t+dur.s2;player.shield=Math.min(850,player.shield+520);announce('IRON ORDER');fxShield()}
+function skill2(){const t=now();if(t<cds.s2||!player.alive)return;cds.s2=t+dur.s2;const fx=player.upgrades?skillEffects(player.upgrades.ranks):{shield:520,shieldCap:850};player.shield=Math.min(fx.shieldCap,player.shield+fx.shield);announce('IRON ORDER');fxShield()}
 function skill3(){const t=now();if(t<cds.s3||!player.alive)return;cds.s3=t+dur.s3;announce('EXECUTION STEP');const start=player.group.position.clone();fxAfterimage(start);for(let i=1;i<=3;i++)setTimeout(()=>fxAfterimage(player.group.position.clone()),i*45);player.group.position.addScaledVector(player.facing,6.2);player.group.position.x=THREE.MathUtils.clamp(player.group.position.x,-57,57);player.group.position.z=THREE.MathUtils.clamp(player.group.position.z,-57,57);fxRing(player.group.position,0xbf3152,.5,3.2,.28);const e=nearest(2.5);if(e)hurtEnemy(e,270)}
 function ultimate(){const t=now();if(t<cds.ult||!player.alive)return;const e=nearest(11);if(!e){announce('NO TARGET TO MARK');return}cds.ult=t+dur.ult;player.deadlineTarget=e;player.deadlineUntil=t+6;announce('YOUR DEADLINE HAS COME',1500);const mark=new THREE.Mesh(new THREE.TorusGeometry(.75,.09,6,28),new THREE.MeshBasicMaterial({color:0xff3456,transparent:true,opacity:.9}));mark.position.set(0,4.35,0);mark.rotation.x=Math.PI/2;e.group.add(mark);FX.push({m:mark,t:0,dur:6,type:'mark',parent:e.group})}
 function hurtPlayer(dmg){if(!player.alive)return;let left=dmg;if(player.shield>0){const s=Math.min(left,player.shield);player.shield-=s;left-=s}player.hp=Math.max(0,player.hp-left);if(player.hp<=0){player.alive=false;announce('RAMZX FALLS',1500);setTimeout(()=>{player.hp=player.maxHp;player.shield=0;player.group.position.set(-55,0,55);player.alive=true;announce('RETURN TO WAR')},3000)}}
 
 const keys=new Set();let joy={x:0,y:0,active:false};let panOffset=new THREE.Vector3(),panDragging=false,panPointer=null,lastPan={x:0,y:0};let aim=null;
-addEventListener('keydown',e=>{if(['Space','Digit1','Digit2','Digit3','Digit4','KeyR'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.repeat)return;if(e.code==='Space')attack();if(e.code==='Digit1')skill1();if(e.code==='Digit2')skill2();if(e.code==='Digit3')skill3();if(e.code==='Digit4')ultimate();if(e.code==='KeyR')panOffset.set(0,0,0)});addEventListener('keyup',e=>keys.delete(e.code));
+addEventListener('keydown',e=>{if(e.target.closest?.('input,select,textarea'))return;if(e.code==='Space'&&e.target.closest?.('button'))return;if(['Space','Digit1','Digit2','Digit3','Digit4','KeyR'].includes(e.code))e.preventDefault();keys.add(e.code);if(e.repeat)return;if(e.code==='Space')attack();if(e.code==='Digit1')skill1();if(e.code==='Digit2')skill2();if(e.code==='Digit3')skill3();if(e.code==='Digit4')ultimate();if(e.code==='KeyR')panOffset.set(0,0,0)});addEventListener('keyup',e=>keys.delete(e.code));
 const joyEl=document.querySelector('#joystick'),stick=document.querySelector('#stick');let joyPid=null;
 function moveJoy(e){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=r.width*.32;let dx=e.clientX-cx,dy=e.clientY-cy,l=Math.hypot(dx,dy)||1;if(l>max){dx*=max/l;dy*=max/l}joy={x:dx/max,y:dy/max,active:true};stick.style.transform=`translate(${dx}px,${dy}px)`}
 joyEl.addEventListener('pointerdown',e=>{joyPid=e.pointerId;joyEl.setPointerCapture(joyPid);moveJoy(e)});joyEl.addEventListener('pointermove',e=>{if(e.pointerId===joyPid)moveJoy(e)});function clearJoy(){joyPid=null;joy={x:0,y:0,active:false};stick.style.transform='translate(0,0)'}joyEl.addEventListener('pointerup',clearJoy);joyEl.addEventListener('pointercancel',clearJoy);
@@ -283,7 +286,7 @@ ui.minimap.addEventListener('pointerdown',e=>{mmPointer=e.pointerId;ui.minimap.s
 ui.minimap.addEventListener('pointermove',e=>{if(e.pointerId!==mmPointer)return;const p=minimapWorld(e);panOffset.copy(p.sub(player.group.position));if(panOffset.length()>35)panOffset.setLength(35)});
 ui.minimap.addEventListener('pointerup',e=>{if(e.pointerId===mmPointer)mmPointer=null});ui.minimap.addEventListener('pointercancel',()=>mmPointer=null);
 
-const pitch=THREE.MathUtils.degToRad(55),yaw=THREE.MathUtils.degToRad(45),distance=24;
+const pitch=THREE.MathUtils.degToRad(55),yaw=THREE.MathUtils.degToRad(45),distance=32;
 const horiz=Math.cos(pitch)*distance,height=Math.sin(pitch)*distance;
 const camBaseOffset=new THREE.Vector3(Math.sin(yaw)*horiz,height,Math.cos(yaw)*horiz);
 const lookAhead=new THREE.Vector3(0,1.0,0);

@@ -1,0 +1,5 @@
+import * as T from 'three';
+import {mergeGeometries} from './utils/BufferGeometryUtils.js';
+// Merge static parts within each joint; keep joint nodes and named animated crystals.
+export function optimizeModel(root){for(const parent of [...walk(root)]){const buckets=new Map();for(const child of [...parent.children]){if(!child.isMesh||['body','crystal'].includes(child.name)||Array.isArray(child.material))continue;child.updateMatrix();let geo=child.geometry.index?child.geometry.toNonIndexed():child.geometry.clone();geo.applyMatrix4(child.matrix);geo.deleteAttribute('uv');geo.clearGroups();if(!buckets.has(child.material))buckets.set(child.material,[]);buckets.get(child.material).push({geo,child});}for(const [mat,items]of buckets){if(items.length<2)continue;const merged=mergeGeometries(items.map(i=>i.geo),false);if(!merged)continue;const mesh=new T.Mesh(merged,mat);mesh.castShadow=mesh.receiveShadow=true;parent.add(mesh);for(const {child}of items)parent.remove(child);}}return root;}
+function* walk(root){yield root;for(const c of [...root.children])yield* walk(c);}
