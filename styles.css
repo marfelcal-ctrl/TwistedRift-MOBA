@@ -24,3 +24,26 @@ button{font:inherit;color:inherit}#app,#game{position:absolute;inset:0;width:100
 #graphicsQuality:focus-visible{outline:2px solid #eed294;outline-offset:2px}
 @media(max-width:800px){#graphicsControl{top:65px;right:64px;gap:5px;padding:5px;font-size:11px}#graphicsQuality{padding:3px}}
 @media(max-width:480px){#graphicsControl{top:149px;right:12px;font-size:10px;gap:4px}}
+
+/* Upgrade buttons are siblings of cast buttons: an unlearned skill can be upgraded
+   without enabling its cast control, and + never casts or starts drag aiming. */
+#skillPad{width:340px;height:266px;transform:none;bottom:max(28px,env(safe-area-inset-bottom))}
+.skillSlot{position:absolute;width:66px;height:66px;pointer-events:none}
+#skillPad .skillSlot>.skill{inset:0;width:100%;height:100%}
+.skillSlot[data-slot="s1"]{right:98px;bottom:0}
+.skillSlot[data-slot="s2"]{right:160px;bottom:90px}
+.skillSlot[data-slot="s3"]{right:99px;bottom:168px}
+.skillSlot[data-slot="ult"]{right:0;bottom:146px;width:76px;height:76px}
+.skillUpgrade{position:absolute;left:50%;top:-39px;transform:translateX(-50%);z-index:3;width:44px;height:44px;border:0;background:transparent;color:#ffe8a4;font-size:28px;font-weight:800;cursor:pointer;pointer-events:auto;touch-action:manipulation;display:grid;place-items:center;text-shadow:0 1px 3px #000}
+.skillUpgrade::before{content:'';position:absolute;inset:6px;z-index:-1;border:1px solid #ffdb81;border-radius:50%;background:radial-gradient(circle at 35% 25%,#987336,#483312);box-shadow:0 0 12px #f8cc5538}
+.skillUpgrade:active::before{background:#b69040}
+.skillUpgrade:focus-visible{outline:2px solid #ffe8a4;border-radius:50%}
+.skillUpgrade[hidden],#quickStats[hidden],#skillPoints[hidden]{display:none}
+#skillPoints{position:absolute;right:0;bottom:272px;color:#f5d98f;font-size:10px;font-weight:700;text-shadow:0 1px 4px #000;white-space:nowrap;pointer-events:none}
+#quickStats{position:absolute;right:180px;bottom:211px;min-height:44px;min-width:76px;border:1px solid #e0bc73;border-radius:5px;background:#241e13ed;color:#f4da9e;pointer-events:auto;cursor:pointer;font-size:11px}
+#fps{font-variant-numeric:tabular-nums}
+#adaptiveControl{display:flex;align-items:center;gap:4px;cursor:pointer;min-height:30px}
+#adaptiveControl input{accent-color:#d4b275}
+@media(max-width:800px){#skillPad{right:12px;bottom:18px}#fps{display:block;position:absolute;right:0;top:23px;font-size:9px}#playerHud{width:min(380px,calc(100vw - 220px))}#a05Progress{width:min(320px,calc(100vw - 280px))}#graphicsControl{flex-wrap:wrap;max-width:222px}#skillPoints{font-size:9px}}
+@media(max-width:480px){#graphicsControl{top:148px;max-width:194px}#playerHud{width:calc(100vw - 185px)}#a05Progress{width:calc(100vw - 244px)}#skillPoints{bottom:267px}}
+@media(max-height:500px) and (min-width:600px){#minimapWrap{width:122px;height:122px;top:55px}#a06Open{top:181px;left:10px;font-size:11px;padding:6px}#alphaNote{display:none}#graphicsControl{top:63px}#a05Actions{top:118px}#a05Shop{top:151px;max-height:55vh}#joystick{bottom:78px;width:108px;height:108px}#stick{left:32px;top:32px;width:44px;height:44px}#controlsHint{display:none}#skillPad{bottom:12px}}

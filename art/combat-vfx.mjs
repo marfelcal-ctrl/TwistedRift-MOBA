@@ -1,8 +1,9 @@
 import * as T from 'three';
+import {MATCH} from '../match-rules.mjs';
 
 // Visual particles are pooled. Projectile callbacks have their own lifetime so
 // lowering graphics or reaching the visual budget never drops combat damage.
-export function createCombatVfx({scene,player,camps=[]}){
+export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x:30,z:28})}){
   const root=new T.Group();root.name='Combat and ambient effects';scene.add(root);
   const shapes={orb:new T.IcosahedronGeometry(1,1),ring:new T.TorusGeometry(1,.026,6,64),
     arc:new T.RingGeometry(.68,1,56,1,0,Math.PI*1.15),
@@ -21,14 +22,16 @@ export function createCombatVfx({scene,player,camps=[]}){
   particleMaterial.customProgramCacheKey=()=> 'rift-particles-v1';
   const pool=new T.InstancedMesh(particleGeometry,particleMaterial,capacity);pool.instanceMatrix.setUsage(T.DynamicDrawUsage);pool.frustumCulled=false;pool.count=0;root.add(pool);
   const dummy=new T.Object3D(),scratchColor=new T.Color();
+  function inView(pos){if(!focus)return true;const p=focus(),bounds=extent();return Math.abs(pos.x-p.x)<bounds.x&&Math.abs(pos.z-p.z)<bounds.z;}
   function emit(pos,color,count=16,speed=3,size=.075,lifetime=.6,up=2){
+    if(!inView(pos))return;
     count=Math.min(Math.ceil(count*budget/capacity),budget-particles.length);
     for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,r=Math.random();particles.push({p:pos.clone(),v:new T.Vector3(Math.sin(a)*speed*r,up+Math.random()*speed,Math.cos(a)*speed*r),size:size*(.5+Math.random()),age:0,dur:lifetime*(.7+Math.random()*.6),color:new T.Color(color).multiplyScalar(2.6)});}
   }
   function material(color,opacity=1){return new T.MeshBasicMaterial({color:new T.Color(color).multiplyScalar(2),transparent:true,opacity,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending});}
   function mesh(g,shape,color,opacity=1){const m=new T.Mesh(shapes[shape],material(color,opacity));m.userData.opacity=opacity;g.add(m);return m;}
   function remove(g){g.removeFromParent();g.traverse(o=>{if(o.isMesh)o.material.dispose();});}
-  function effect(pos,duration,build,update){if(effects.length>=128)return null;const g=new T.Group();g.position.copy(pos);build(g);root.add(g);effects.push({g,age:0,duration,update});return g;}
+  function effect(pos,duration,build,update){if(effects.length>=128||!inView(pos))return null;const g=new T.Group();g.position.copy(pos);build(g);root.add(g);effects.push({g,age:0,duration,update});return g;}
   function fade(g,alpha){g.traverse(o=>{if(o.isMesh)o.material.opacity=o.userData.opacity*alpha;});}
   function ring(pos,color=0xe93763,start=.6,end=4,duration=.45){return effect(pos,duration,g=>{g.position.y+=.24;const a=mesh(g,'ring',color,.9);a.rotation.x=-Math.PI/2;const b=mesh(g,'rune',color,.32);b.rotation.x=-Math.PI/2;b.scale.setScalar(.83);},(g,q)=>{g.scale.setScalar(T.MathUtils.lerp(start,end,1-(1-q)**2));g.rotation.y+=.02;fade(g,1-q);});}
   function burst(pos,color=0xff426d){emit(pos.clone().add(new T.Vector3(0,1,0)),color,22,4,.085,.55,1.5);}
@@ -57,17 +60,17 @@ export function createCombatVfx({scene,player,camps=[]}){
   const ms=mesh(mark,'shard',0xff567e,.9);ms.position.y=.65;ms.scale.set(.16,.5,.16);
   for(const x of [-.5,.5]){const m=mesh(mark,'beam',0xff7795,.8);m.position.set(x,.6,0);m.scale.set(.8,1.1,.8);m.rotation.z=x>0?-.55:.55;}
   function projectile(from,to,color,onHit,duration=.38){
-    const g=new T.Group();let visible=shots.filter(s=>s.g).length<128;
+    const g=new T.Group();let visible=(inView(from)||inView(to))&&shots.filter(s=>s.g).length<128;
     if(visible){const orb=mesh(g,'orb',color);orb.scale.setScalar(from.y>3?.22:.13);const halo=mesh(g,'orb',color,.15);halo.scale.setScalar(from.y>3?.45:.29);g.position.copy(from);root.add(g);}
     shots.push({from:from.clone(),to:to.clone(),color,onHit,duration:Math.max(.001,duration),age:0,trail:0,g:visible?g:null});
   }
   const ambients=[];
-  for(const [x,z,color,radius,height]of [[-55,55,0x519cfa,2.6,.85],[55,-55,0xee4465,2.6,.85],[0,0,0xa751ec,4,.52]]){
+  for(const [x,z,color,radius,height]of [[...MATCH.fountain.blue,0x519cfa,2.08,.68],[...MATCH.fountain.red,0xee4465,2.08,.68],[0,0,0xa751ec,4,.52]]){
     const g=new T.Group();g.position.set(x,height,z);root.add(g);
     for(let i=0;i<2;i++){const r=mesh(g,'ring',color,.28);r.rotation.x=-Math.PI/2;r.scale.setScalar(radius*(1-i*.11));r.position.y=i*.12;}
     ambients.push({g,color,radius});
   }
-  function update(dt,t=elapsed+dt){
+  function update(dt,t=elapsed+dt,renderParticles=true){
     elapsed=t;
     for(let i=effects.length-1;i>=0;i--){const f=effects[i];f.age+=dt;const q=Math.min(1,f.age/f.duration);f.update(f.g,q);if(q>=1){remove(f.g);effects.splice(i,1);}}
     for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.age+=dt;s.trail+=dt;const q=Math.min(1,s.age/s.duration);if(s.g){s.g.position.lerpVectors(s.from,s.to,q);s.g.position.y+=Math.sin(q*Math.PI)*.22;s.g.rotation.y+=dt*8;if(s.trail>.045){s.trail=0;emit(s.g.position,s.color,3,.4,.065,.26,.1);}}
@@ -78,10 +81,13 @@ export function createCombatVfx({scene,player,camps=[]}){
     ambientTime+=dt;for(const a of ambients){a.g.rotation.y=t*.18;a.g.children[1].position.y=.14+Math.sin(t*1.3)*.06;if(ambientTime>.15){const angle=Math.random()*Math.PI*2;emit(a.g.position.clone().add(new T.Vector3(Math.sin(angle)*a.radius,0,Math.cos(angle)*a.radius)),a.color,2,.25,.05,2,1);}}
     if(ambientTime>.15){ambientTime=0;const c=camps[Math.floor(Math.random()*camps.length)];if(c){const color={yellow:0xeac36a,purple:0xb461ef,blue:0x5aa7ff,red:0xff664e}[c[2]];emit(new T.Vector3(c[0],.5,c[1]),color,2,.5,.05,1.5,.6);}}
     for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.age+=dt;if(p.age>=p.dur||i>=budget){particles[i]=particles[particles.length-1];particles.pop();continue;}p.p.addScaledVector(p.v,dt);p.v.y-=dt*2.3;}
+    if(renderParticles)present();
+  }
+  function present(){
     for(let i=0;i<particles.length;i++){const p=particles[i],q=1-p.age/p.dur;dummy.position.copy(p.p);dummy.rotation.set(p.age*4,i*2.4,p.age*2);dummy.scale.setScalar(p.size*(.25+q*.75));dummy.updateMatrix();pool.setMatrixAt(i,dummy.matrix);pool.setColorAt(i,scratchColor.copy(p.color));life.setX(i,q*q);}
     pool.count=particles.length;pool.instanceMatrix.needsUpdate=true;if(pool.instanceColor)pool.instanceColor.needsUpdate=true;life.needsUpdate=true;
   }
-  return {ring,burst,slash,dash,afterimage,execution,shieldCast,projectile,update,emit,
+  return {ring,burst,slash,dash,afterimage,execution,shieldCast,projectile,update,present,emit,
     setBudget(n){budget=T.MathUtils.clamp(Math.round(n),1,capacity);},
     get counts(){return {particles:particles.length,effects:effects.length,projectiles:shots.length};},
     dispose(){for(const f of effects)remove(f.g);for(const s of shots)if(s.g)remove(s.g);effects.length=shots.length=particles.length=0;remove(shield);remove(mark);for(const a of ambients)remove(a.g);pool.removeFromParent();pool.dispose();particleGeometry.dispose();particleMaterial.dispose();Object.values(shapes).forEach(g=>g.dispose());root.removeFromParent();}

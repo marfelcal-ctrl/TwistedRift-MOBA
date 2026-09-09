@@ -1,9 +1,9 @@
 // Alpha 0.7: full battlefield art, maximum graphics and animated combat VFX.
-scene.children.filter(o=>o.userData.legacyTerrain).forEach(o=>{o.visible=false;});
-for(const o of [ground,river,pitArena,pitSigil,...campObjects])o.visible=false;
+scene.children.filter(o=>o.userData.legacyTerrain).forEach(o=>{o.visible=false;o.removeFromParent();});
+for(const o of [ground,river,pitArena,pitSigil,...campObjects]){o.visible=false;o.removeFromParent();}
 const riftBattlefield=createBattlefield({scene,laneA,laneB,camps,wallSpots});
-const riftVfx=createCombatVfx({scene,player,camps});
-const riftArt=installRiftArt({scene,player,enemies,towers,cores:[blueCore,redCore],pitlord,pitOwner:a04Pit,minions:a04Minions,jungle:a04Jungle,heightAt:riftBattlefield.heightAt});
+const riftVfx=createCombatVfx({scene,player,camps,focus:()=>cameraSmoothedFocus,extent:()=>({x:camera.right+6,z:camera.top/Math.sin(pitch)+6})});
+const riftArt=installRiftArt({scene,player,enemies,towers,cores:[blueCore,redCore],pitlord,pitOwner:a04Pit,minions:a04Minions,jungle:a04Jungle,heightAt:riftBattlefield.heightAt,focus:()=>cameraSmoothedFocus});
 const riftLightSources=[...towers,blueCore,redCore].map(group=>({group,color:group.userData.team==='blue'?0x578dff:0xff4569,height:4,intensity:32}));
 const riftGraphics=installGraphics({scene,renderer,camera,moon,lightSources:riftLightSources,onQuality:q=>riftVfx.setBudget(q.particles)});
 riftArt.update(0);
@@ -33,10 +33,13 @@ attack=function(...args){const target=player.deadlineTarget,before=cds.attack;co
 const a07HurtPlayer=hurtPlayer;
 hurtPlayer=function(...args){const hp=player.hp,shield=player.shield;const result=a07HurtPlayer(...args);if(player.hp<hp||player.shield<shield)riftVfx.burst(player.group.position,player.shield>0?0xafa0ff:0xff6c82);return result;};
 
-const a07Graphics=document.createElement('label');a07Graphics.id='graphicsControl';
-a07Graphics.innerHTML='Graphics <select id="graphicsQuality" aria-label="Graphics quality"><option value="maximum">Maximum</option><option value="high">High</option><option value="balanced">Balanced</option></select>';
+const a07Graphics=document.createElement('div');a07Graphics.id='graphicsControl';
+a07Graphics.innerHTML='<label for="graphicsQuality">Graphics</label> <select id="graphicsQuality" aria-label="Graphics quality"><option value="maximum">Maximum</option><option value="high">High</option><option value="balanced">Balanced</option></select><label id="adaptiveControl" title="Automatically adjust resolution to help frame rate while keeping model detail"><input id="adaptiveResolution" type="checkbox"> Auto resolution</label>';
 document.querySelector('#app').append(a07Graphics);
 const a07Select=a07Graphics.querySelector('select');a07Select.value=riftGraphics.quality;
 a07Select.addEventListener('change',()=>{a07Select.value=riftGraphics.setQuality(a07Select.value);});
 
-function updateAlpha07(dt,t){riftArt.update(dt);riftBattlefield.update(t);riftVfx.update(dt,t);}
+const a08Adaptive=a07Graphics.querySelector('#adaptiveResolution');a08Adaptive.checked=riftGraphics.adaptive;
+a08Adaptive.addEventListener('change',()=>riftGraphics.setAdaptive(a08Adaptive.checked));
+
+function updateAlpha07(dt,t){riftArt.update(dt);riftBattlefield.update(t);}

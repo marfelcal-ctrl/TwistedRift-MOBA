@@ -9,7 +9,7 @@ player.a05AbilityAmp=1;
 player.a05StructureAmp=1;
 player.a05Regen=0;
 const A05_XP_THRESHOLDS=[0,100,650,1800,3200,5000,7200,9700,12500,15600,19000,22700,26700,31000,35600];
-const A05_FOUNTAIN=new THREE.Vector3(-55,0,55);
+const A05_FOUNTAIN=new THREE.Vector3(MATCH.fountain.blue[0],0,MATCH.fountain.blue[1]);
 let a05LastPassiveGold=a04Time(now());
 let a05Recall=false,a05RecallEnd=0,a05RecallStart=new THREE.Vector3();
 let a05PlayerDamageContext=false,a05CurrentAction='';
@@ -40,7 +40,7 @@ const A05_ITEMS=[
  {id:'voidglass',name:'Voidglass Scepter',price:3250,desc:'+15% ability damage',apply(){player.a05AbilityAmp*=1.15}},
  {id:'lantern',name:"Saint's Lantern",price:2750,desc:'+450 Max HP · +18 HP/sec regeneration',apply(){player.maxHp+=450;player.hp+=450;player.a05Regen+=18}}
 ];
-function a05NearFountain(){return player.group.position.distanceTo(A05_FOUNTAIN)<8.2}
+function a05NearFountain(){return player.group.position.distanceTo(A05_FOUNTAIN)<6.5}
 function a05ToastMsg(text,color='#f3d775'){a05Toast.textContent=text;a05Toast.style.color=color;a05Toast.style.opacity='1';clearTimeout(a05Toast._t);a05Toast._t=setTimeout(()=>a05Toast.style.opacity='0',900)}
 function a05RenderShop(){
  const slots=player.items.length<6?`${player.items.length}/6 SLOTS`:'INVENTORY FULL';
@@ -97,7 +97,7 @@ hurtPlayer=function(dmg,type='physical'){if(dmg>0)a05CancelRecall('RECALL INTERR
 function a05StartRecall(){if(!player.alive||a05Recall)return;if(a05NearFountain()){a05ToastMsg('ALREADY AT FOUNTAIN');return}a05Recall=true;a05RecallEnd=now()+5;a05RecallStart.copy(player.group.position);a05RecallBar.style.display='block';announce('RECALLING…',600)}
 function a05FinishRecall(){a05Recall=false;a05RecallBar.style.display='none';player.group.position.copy(A05_FOUNTAIN);player.hp=player.maxHp;player.shield=0;panOffset.set(0,0,0);announce('RETURNED TO FOUNTAIN',800);a05ToastMsg('FOUNTAIN RESTORED YOU','#79e49d')}
 document.querySelector('#a05RecallBtn').addEventListener('click',a05StartRecall);
-addEventListener('keydown',e=>{if(e.target.closest?.('input,select,textarea'))return;if(e.repeat)return;if(e.code==='KeyV')a05StartRecall();if(e.code==='KeyB')a05ToggleShop();if(e.code==='KeyG'){player.gold+=1000;a05ToastMsg('+1000 PRACTICE GOLD');if(a05Shop.style.display==='block')a05RenderShop()}});
+addEventListener('keydown',e=>{if(gameMode!=='battle')return;if(e.target.closest?.('input,select,textarea'))return;if(e.repeat)return;if(e.code==='KeyV')a05StartRecall();if(e.code==='KeyB')a05ToggleShop();if(e.code==='KeyG'){player.gold+=1000;a05ToastMsg('+1000 PRACTICE GOLD');if(a05Shop.style.display==='block')a05RenderShop()}});
 
 const a04UpdateUiBase=updateUi;
 updateUi=function(t){a04UpdateUiBase(t);const mt=a04Time(t);const next=a05NextXp(),prev=A05_XP_THRESHOLDS[Math.max(0,player.level-1)],span=Math.max(1,next-prev),pct=player.level>=15?100:100*(player.xp-prev)/span;document.querySelector('#a05XpFill').style.width=`${THREE.MathUtils.clamp(pct,0,100)}%`;document.querySelector('#a05XpText').textContent=player.level>=15?'MAX LEVEL':`XP ${Math.floor(player.xp)} / ${next}`;document.querySelector('#a05Role').textContent=mt<300?'EXP LANER · EARLY ECONOMY':'EXP LANER · OPEN ECONOMY';ui.statusText.textContent=player.deadlineTarget&&t<player.deadlineUntil?'DEADLINE ACTIVE':a05Recall?'RECALLING':a04PitBuff.blue>mt?'PITLORD SIEGE BUFF':`LV ${player.level} · ${player.items.length}/6 ITEMS`};
@@ -107,7 +107,7 @@ function updateAlpha05(dt,t){
  // Standard open-economy passive gold begins at 5:00 for this EXP-laner prototype.
  if(mt>=300){while(mt-a05LastPassiveGold>=1){player.gold+=2;a05LastPassiveGold+=1}}else a05LastPassiveGold=mt;
  if(player.a05Regen>0&&player.alive)player.hp=Math.min(player.maxHp,player.hp+player.a05Regen*dt);
- const fd=player.group.position.distanceTo(A05_FOUNTAIN);if(fd<6.5&&player.alive){player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.18*dt)}
+ const fd=player.group.position.distanceTo(A05_FOUNTAIN);if(fd<5.2&&player.alive){player.hp=Math.min(player.maxHp,player.hp+player.maxHp*.18*dt)}
  if(a05Recall){
    if(player.group.position.distanceTo(a05RecallStart)>.12){a05CancelRecall();return}
    const left=Math.max(0,a05RecallEnd-t),pct=100*(1-left/5);document.querySelector('#a05RecallFill').style.width=`${THREE.MathUtils.clamp(pct,0,100)}%`;
