@@ -4,8 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift 3D — Alpha 0.7 — Living Battlefield</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Twisted Rift — Alpha 0.8 — Enter the Abyss</title>
+  <link rel="stylesheet" href="styles.css?version=alpha08" />
+  <link rel="stylesheet" href="dark-ui.css?version=alpha08" />
   <style>
     #cameraLock{position:absolute;right:18px;top:82px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(9,9,14,.72);color:#f4f1ea;font-size:24px;line-height:1;display:grid;place-items:center;z-index:8;cursor:pointer;touch-action:manipulation}
     #cameraLock:active{transform:scale(.94);background:rgba(70,28,48,.82)}
@@ -16,24 +17,27 @@
     #matchHud span{padding:5px 8px;border:1px solid rgba(255,255,255,.14);background:rgba(4,6,10,.72);font-size:9px;letter-spacing:.08em;color:#d9d5df;white-space:nowrap}
     #matchTimer{font-weight:800;color:#fff!important;min-width:48px;text-align:center}
     .floatDamage{position:fixed;z-index:15;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;font-size:16px;text-shadow:0 2px 5px #000;transition:opacity .1s;}
-    #alphaNote{position:absolute;right:16px;top:138px;max-width:230px;padding:8px 10px;border:1px solid rgba(255,255,255,.12);background:rgba(6,7,11,.66);font-size:9px;line-height:1.45;color:#aaa5b3;z-index:6;pointer-events:none}
+    #alphaNote{position:absolute;right:16px;top:182px;max-width:230px;padding:8px 10px;border:1px solid rgba(255,255,255,.12);background:rgba(6,7,11,.66);font-size:9px;line-height:1.45;color:#aaa5b3;z-index:6;pointer-events:none}
     #alphaNote b{color:#f4f1ea}
     @media(max-width:800px){#cameraLock{top:64px;right:12px;width:42px;height:42px;font-size:21px}#minimapWrap{left:10px;top:56px;width:132px;height:132px;padding:4px}#minimapLabel{font-size:6px}#matchHud{top:34px;gap:3px}#matchHud span{font-size:7px;padding:4px 5px}#alphaNote{display:none}}
   </style>
 </head>
 <body>
-  <div id="app">
-    <canvas id="game"></canvas>
+  <div id="app" data-mode="lobby">
+    <canvas id="game" tabindex="0" aria-label="Twisted Rift 3D battlefield"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>3D ALPHA 0.7 · LIVING BATTLEFIELD</span></div>
+      <div class="brand">TWISTED RIFT <span>ALPHA 0.8 · THE ABYSS AWAITS</span></div>
       <div id="objective">LEVEL UP · FARM · GEAR UP · BREAK THE RED CORE</div>
       <div id="fps">-- FPS</div>
     </div>
 
-    <div id="matchHud">
-      <span id="matchTimer">0:00</span>
+    <div id="matchHud" aria-label="Battle scoreboard">
+      <span id="matchTimer" aria-label="Match time">0:00</span>
+      <span id="kdaText" aria-label="Kills 0, deaths 0, assists 0">☠ 0 / 0 / 0</span>
       <span id="goldText">500 GOLD</span>
+    </div>
+    <div id="objectiveTimers">
       <span id="waveText">WAVE 0</span>
       <span id="pitlordText">PITLORD: 3:30</span>
     </div>
@@ -42,7 +46,7 @@
 
     <div id="minimapWrap">
       <canvas id="minimap" width="220" height="220"></canvas>
-      <div id="minimapLabel">DRAG TO SCOUT · ⌖ TO RECENTER</div>
+      <div id="minimapLabel">SCOUT THE RIFT</div>
     </div>
 
     <div id="targetHud">
@@ -60,32 +64,81 @@
       </div>
     </div>
 
-    <div id="alphaNote"><b>ALPHA 0.7 TEST</b><br>Choose skills or stats each level. Open <b>U · Upgrades</b>. Stats unlock at level 6; ultimate ranks unlock at levels 4, 6 and 9. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
+    <button id="battleMenu" type="button" aria-label="Open lobby and pause practice">☰ <span>LOBBY</span></button>
+    <div id="alphaNote"><b>ALPHA 0.8 TEST</b><br>Tap the <b>+</b> above a skill to upgrade. <b>U</b> opens details. Stats unlock at level 6; ultimate ranks unlock at levels 4, 6 and 9. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
     <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · U upgrades · V recall · B shop · G practice gold · P force Pitlord · R recenter</div>
     <button id="cameraLock" type="button" aria-label="Recenter camera" title="Recenter camera">⌖</button>
 
     <div id="touchUi">
       <div id="joystick" aria-label="Movement joystick"><div id="stick"></div></div>
       <div id="skillPad">
-        <button class="skill ult" data-action="ult"><small>4</small><span>DEADLINE</span><em></em></button>
-        <button class="skill" data-action="s3"><small>3</small><span>STEP</span><em></em></button>
-        <button class="skill" data-action="s2"><small>2</small><span>ORDER</span><em></em></button>
-        <button class="skill" data-action="s1"><small>1</small><span>SEVER</span><em></em></button>
-        <button class="skill attack" data-action="attack"><span>ATTACK</span><em></em></button>
+        <div id="skillPoints" aria-live="polite"></div>
+        <button id="quickStats" type="button" hidden>+ STATS</button>
+        <div class="skillSlot" data-slot="ult">
+          <button class="skill ult" data-action="ult"><svg class="skillGlyph" viewBox="0 0 60 60" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 31V21a12 12 0 0 1 24 0v10l-5 4v9H23v-9Z"/><path d="m21 25 6 4m12-4-6 4m-6 10v8m6-8v8M12 14 6 9m42 5 6-5M11 43l-5 7m43-7 5 7"/></svg><small>4</small><span>DEADLINE</span><em></em></button>
+          <button class="skillUpgrade" data-upgrade="ult" type="button" aria-label="Upgrade ult" hidden>+</button>
+        </div>
+        <div class="skillSlot" data-slot="s3">
+          <button class="skill" data-action="s3"><svg class="skillGlyph" viewBox="0 0 60 60" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m36 8-21 26h14l-4 20 24-28H35Z"/></svg><small>3</small><span>STEP</span><em></em></button>
+          <button class="skillUpgrade" data-upgrade="s3" type="button" aria-label="Upgrade s3" hidden>+</button>
+        </div>
+        <div class="skillSlot" data-slot="s2">
+          <button class="skill" data-action="s2"><svg class="skillGlyph" viewBox="0 0 60 60" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m30 9 18 7-3 22-15 14-15-14-3-22Z"/><path d="m30 18 7 13-7 12-7-12Z"/></svg><small>2</small><span>ORDER</span><em></em></button>
+          <button class="skillUpgrade" data-upgrade="s2" type="button" aria-label="Upgrade s2" hidden>+</button>
+        </div>
+        <div class="skillSlot" data-slot="s1">
+          <button class="skill" data-action="s1"><svg class="skillGlyph" viewBox="0 0 60 60" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 45Q19 13 49 12Q27 24 16 49M18 48Q32 29 48 26"/></svg><small>1</small><span>SEVER</span><em></em></button>
+          <button class="skillUpgrade" data-upgrade="s1" type="button" aria-label="Upgrade s1" hidden>+</button>
+        </div>
+        <button class="skill attack" data-action="attack"><svg class="skillGlyph" viewBox="0 0 60 60" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m8 49 36-36 6-3-3 7-36 36m-5-9 12 12m-8-7-5 6"/></svg><span>ATTACK</span><em></em></button>
       </div>
     </div>
+
+
+    <section id="lobby" aria-label="Main lobby">
+      <header class="lobbyTop">
+        <div class="lobbyProfile"><div class="profileCrest" aria-hidden="true"><svg viewBox="0 0 48 56"><path d="M4 4 24 0 44 4v27L24 53 4 31Z"/><path d="m24 10 7 13-7 17-7-17Z"/></svg></div><div><strong>RAMZX</strong><small>THE FORSAKEN</small></div><b id="profileLevel">LV 1</b></div>
+        <div class="lobbyBrand">TWISTED <span>RIFT</span><small>DESCEND. CONQUER. RETURN.</small></div>
+        <div class="lobbyWallet"><div title="Battle gold"><i class="coinGlyph" aria-hidden="true">G</i><span id="lobbyGold">500</span><small>GOLD</small></div><div title="Blood gems"><i class="gemGlyph" aria-hidden="true"></i><span>0</span><small>BLOOD GEMS</small></div></div>
+      </header>
+      <nav class="lobbyNav" aria-label="Lobby navigation">
+        <button data-lobby-tab="Armory" aria-controls="lobbyDrawer" aria-expanded="false"><span aria-hidden="true">⚔</span> Armory <i>01</i></button>
+        <button data-lobby-tab="Heroes" aria-controls="lobbyDrawer" aria-expanded="false"><span aria-hidden="true">♜</span> Heroes <i>02</i></button>
+        <button data-lobby-tab="Quests" aria-controls="lobbyDrawer" aria-expanded="false"><span aria-hidden="true">♱</span> Quests <i>03</i></button>
+        <button data-lobby-tab="Forge" aria-controls="lobbyDrawer" aria-expanded="false"><span aria-hidden="true">⚒</span> Forge <i>04</i></button>
+      </nav>
+      <div class="heroCaption"><p id="heroAvailability">READY FOR THE DESCENT</p><h1 id="lobbyHeroName">RAMZX</h1><h2 id="lobbyHeroTitle">The Dread Marshal</h2><div class="heroCaptionRule"></div></div>
+      <aside class="lobbyLore"><span>CHAPTER I · THE FRACTURE</span><h2>The Rift remembers.</h2><p>Beyond the iron gates, every victory demands its price.</p><small>ALPHA 0.8</small></aside>
+      <div class="lobbyLaunch"><p id="lobbyMode">TWISTED RIFT · SOLO PRACTICE</p><button id="enterAbyss" type="button"><span id="enterAbyssLabel">ENTER THE ABYSS</span><small>ANSWER THE RIFT’S CALL</small></button></div>
+      <section id="lobbyDrawer" aria-labelledby="lobbyDrawerTitle" hidden><header><h2 id="lobbyDrawerTitle"></h2><button id="closeLobbyDrawer" type="button" aria-label="Close lobby panel">×</button></header><div id="lobbyDrawerContent"></div></section>
+    </section>
+
+    <section id="matchFlow" aria-label="Practice match entry" hidden>
+      <div id="readyScreen">
+        <p class="flowEyebrow">THE RIFT HAS ANSWERED</p><h1>THE GATES ARE OPEN</h1>
+        <p class="flowDisclosure">Solo practice · acceptance and team lineup preview</p>
+        <div class="readyFormation"><div id="allyShields" class="shieldColumn" aria-label="Five ally preview slots"></div><div class="runestone"><div class="runestoneInner"><span>SEAL YOUR OATH</span><b id="readyCountdown" aria-live="off">20</b><small id="readyCount">0 / 10 READY</small></div></div><div id="enemyShields" class="shieldColumn" aria-label="Five enemy preview slots"></div></div>
+        <button id="acceptBattle" class="ironBattleButton" type="button">ENTER BATTLE</button><button id="cancelMatch" class="cancelMatch" type="button">Return to the gates</button>
+        <p id="flowStatus" role="status"></p>
+      </div>
+      <div id="versusScreen" hidden>
+        <header><p class="flowEyebrow">TWISTED RIFT</p><h1>THE DESCENT BEGINS</h1><p class="flowDisclosure">Lineup preview · this practice battle plays as RAMZX</p></header>
+        <div id="allyCards" class="versusTeam allies" aria-label="Ally hero lineup"></div><div class="versusDivider"><span>THE FORSAKEN</span><b>VS</b><span>THE ABYSSBOUND</span></div><div id="enemyCards" class="versusTeam enemies" aria-label="Enemy hero lineup"></div>
+        <footer><p id="assetProgress" role="status">Preparing hero portraits · 0 / 10</p><div class="versusProgress"><i id="assetProgressFill"></i></div><p>Protect your waves. Break their towers. Claim the Pitlord.</p></footer>
+      </div>
+    </section>
 
     <div id="loading" class="show">
       <div class="loaderSigil">✦</div>
       <h1>TWISTED RIFT</h1>
       <p id="loadingText">Preparing the 3D battlefield...</p>
-      <small>Choose your first skill. Gain one upgrade point each level; save or spend it on skills and stats.</small>
+      <small>Tap + above a skill to learn it. Each level grants one point to spend or save.</small>
     </div>
   </div>
 
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
   </script>
-  <script type="module" src="alpha05_bootstrap.js?version=alpha07"></script>
+  <script type="module" src="alpha05_bootstrap.js?version=alpha08"></script>
 </body>
 </html>

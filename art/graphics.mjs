@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {cameraBounds,createResolutionController} from '../match-rules.mjs';
 import {EffectComposer} from './postprocessing/EffectComposer.js';
 import {RenderPass} from './postprocessing/RenderPass.js';
 import {UnrealBloomPass} from './postprocessing/UnrealBloomPass.js';
@@ -59,14 +60,24 @@ export function installGraphics({scene,renderer,camera,moon,lightSources=[],onQu
   room.dispose();pmrem.dispose();
   scene.traverse(o=>{if(o.isMesh)for(const m of Array.isArray(o.material)?o.material:[o.material])detailMaterial(m);});
   const target=new T.WebGLRenderTarget(1,1,{type:T.HalfFloatType});
-  const composer=new EffectComposer(renderer,target);composer.addPass(new RenderPass(scene,camera));
+  const composer=new EffectComposer(renderer,target),mainPass=new RenderPass(scene,camera);composer.addPass(mainPass);
   const bloom=new UnrealBloomPass(new T.Vector2(1,1),.55,.48,1.1);composer.addPass(bloom);composer.addPass(new OutputPass());
-  let quality='maximum',width=1,height=1;
-  function resize(w=innerWidth,h=innerHeight){width=Math.max(1,w);height=Math.max(1,h);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();composer.setSize(width,height);}
+  let quality='maximum',width=1,height=1,adaptive=true,lightTime=1,shadowTime=1;
+  const resolution=createResolutionController();
+  renderer.shadowMap.autoUpdate=false;
+  function resize(w=innerWidth,h=innerHeight){
+    width=Math.max(1,w);height=Math.max(1,h);renderer.setSize(width,height,false);
+    if(camera.isOrthographicCamera)Object.assign(camera,cameraBounds(width,height));else camera.aspect=width/height;
+    camera.updateProjectionMatrix();composer.setSize(width,height);renderer.shadowMap.needsUpdate=true;
+  }
+  function applyResolution(){
+    const ratio=Math.min(globalThis.devicePixelRatio||1,QUALITY_PRESETS[quality].pixelRatio)*(adaptive?resolution.scale:1);
+    renderer.setPixelRatio(ratio);composer.setPixelRatio(ratio);
+  }
+  function setAdaptive(value){adaptive=!!value;resolution.reset();applyResolution();try{localStorage.setItem('twisted-rift-auto-resolution',String(adaptive));}catch{}return adaptive;}
   function setQuality(key){
     quality=Object.hasOwn(QUALITY_PRESETS,key)?key:'maximum';const q=QUALITY_PRESETS[quality];
-    const ratio=Math.min(globalThis.devicePixelRatio||1,q.pixelRatio);
-    renderer.setPixelRatio(ratio);composer.setPixelRatio(ratio);
+    resolution.reset();applyResolution();
     for(const rt of [composer.renderTarget1,composer.renderTarget2]){rt.samples=Math.min(q.samples,renderer.capabilities.maxSamples);rt.dispose();}
     const size=Math.min(q.shadow,renderer.capabilities.maxTextureSize);
     moon.shadow.mapSize.set(size,size);moon.shadow.map?.dispose();moon.shadow.map=null;moon.shadow.needsUpdate=true;
@@ -75,13 +86,28 @@ export function installGraphics({scene,renderer,camera,moon,lightSources=[],onQu
     try{localStorage.setItem('twisted-rift-graphics',quality);}catch{}
     return quality;
   }
-  let saved;try{saved=localStorage.getItem('twisted-rift-graphics');}catch{}setQuality(saved||'maximum');
+  let saved;try{saved=localStorage.getItem('twisted-rift-graphics');adaptive=localStorage.getItem('twisted-rift-auto-resolution')!=='false';}catch{}setQuality(saved||'maximum');
   const direction=new T.Vector3(),focus=new T.Vector3();
-  return {setQuality,resize,get quality(){return quality;},render(dt){
-    camera.getWorldDirection(direction);focus.copy(camera.position).addScaledVector(direction,32);
-    moon.target.position.set(focus.x,0,focus.z);moon.position.set(focus.x-45,70,focus.z+30);
-    const nearby=lightSources.filter(s=>s.group.visible).sort((a,b)=>a.group.position.distanceToSquared(focus)-b.group.position.distanceToSquared(focus));
-    localLights.forEach((light,i)=>{const source=nearby[i];light.intensity=source&&source.group.position.distanceToSquared(focus)<1200?source.intensity||28:0;if(light.intensity){light.color.setHex(source.color);light.position.copy(source.group.position);light.position.y+=source.height||3;}});
-    composer.render(dt);
+  return {setQuality,setAdaptive,resize,get adaptive(){return adaptive;},get resolutionScale(){return adaptive?resolution.scale:1;},get quality(){return quality;},render(dt){
+    if(adaptive&&resolution.sample(dt))applyResolution();
+    camera.getWorldDirection(direction);
+    focus.copy(camera.position).addScaledVector(direction,-camera.position.y/direction.y);
+    // Refresh expensive shadow rendering at 20 Hz. Units still animate every frame.
+    shadowTime+=dt;lightTime+=dt;
+    if(shadowTime>=.05){
+      const x=Math.round(focus.x*4)/4,z=Math.round(focus.z*4)/4;
+      moon.target.position.set(x,0,z);moon.position.set(x-45,70,z+30);
+      renderer.shadowMap.needsUpdate=true;shadowTime=0;
+    }
+    if(lightTime>=.25){
+      lightTime=0;
+      const nearby=lightSources.filter(s=>s.group.visible).sort((a,b)=>a.group.position.distanceToSquared(focus)-b.group.position.distanceToSquared(focus));
+      localLights.forEach((light,i)=>{const source=nearby[i];light.intensity=source&&source.group.position.distanceToSquared(focus)<1200?source.intensity||28:0;if(light.intensity){light.color.setHex(source.color);light.position.copy(source.group.position);light.position.y+=source.height||3;}});
+    }
+    mainPass.scene=scene;mainPass.camera=camera;composer.render(dt);
+  },renderStage(stage,stageCamera,dt){
+    if(adaptive&&resolution.sample(dt))applyResolution();
+    shadowTime+=dt;if(shadowTime>=.05){renderer.shadowMap.needsUpdate=true;shadowTime=0;}
+    mainPass.scene=stage;mainPass.camera=stageCamera;composer.render(dt);
   },dispose(){composer.dispose();bloom.dispose();environment.dispose();scene.environment=null;localLights.forEach(l=>l.removeFromParent());fill.removeFromParent();}};
 }

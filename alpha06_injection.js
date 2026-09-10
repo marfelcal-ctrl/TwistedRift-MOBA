@@ -15,10 +15,21 @@ a06Style.textContent=`
 `;
 document.head.appendChild(a06Style);
 const a06Open=document.createElement('button');a06Open.id='a06Open';a06Open.type='button';a06Open.setAttribute('aria-controls','a06Panel');
-const a06Panel=document.createElement('section');a06Panel.id='a06Panel';a06Panel.setAttribute('aria-label','Level upgrades');
+const a06Panel=document.createElement('section');a06Panel.id='a06Panel';a06Panel.hidden=true;a06Panel.setAttribute('aria-label','Level upgrades');
 a06Panel.innerHTML='<header><h2>Level upgrades</h2><button id="a06Close" type="button" aria-label="Close upgrades">Close</button></header><p id="a06Points" aria-live="polite"></p><div id="a06Choices"></div><p id="a06Stats"></p>';
 document.querySelector('#app').append(a06Open,a06Panel);
 const a06Names={s1:'Sever',s2:'Iron Order',s3:'Execution Step',ult:'Deadline',stats:'Stats +2'};
+const a06SkillControls=new Map();
+for(const key of ['s1','s2','s3','ult']){
+ const skill=document.querySelector(`.skill[data-action="${key}"]`),plus=document.querySelector(`.skillUpgrade[data-upgrade="${key}"]`);
+ const badge=document.createElement('b');badge.className='a06Rank';skill.append(badge);
+ a06SkillControls.set(key,{skill,plus,badge});
+ plus.addEventListener('pointerdown',e=>e.stopPropagation());
+ plus.addEventListener('click',e=>{e.stopPropagation();a06Spend(key);});
+}
+const a06QuickStats=document.querySelector('#quickStats');
+a06QuickStats.addEventListener('click',()=>a06Spend('stats'));
+
 function a06Description(key,rank){
  const next={...player.upgrades.ranks,[key]:rank+1},effect=skillEffects(next);
  if(key==='s1')return `${Math.round(effect.sever)} cleave damage`;
@@ -35,15 +46,37 @@ function a06Render(){
  for(const key of ['s1','s2','s3','ult','stats']){const rank=key==='stats'?state.stats:state.ranks[key],cap=key==='stats'?5:key==='ult'?3:10,status=upgradeStatus(state,player.level,key);const b=document.createElement('button');b.type='button';b.className='a06Choice';b.dataset.upgrade=key;b.disabled=!status.allowed;
  const title=document.createElement('strong');title.textContent=`${a06Names[key]} · ${rank}/${cap}`;const desc=document.createElement('small');desc.textContent=rank===cap?'Fully upgraded':a06Description(key,rank);const reason=document.createElement('small');reason.textContent=status.reason;b.append(title,desc,reason);choices.append(b);}
  a06Panel.querySelector('#a06Stats').textContent=`Max HP ${player.maxHp} · Physical defense ${player.physicalDefense} · Magical defense ${player.magicalDefense}. Stats never increase automatically on level-up.`;
- for(const key of ['s1','s2','s3','ult']){const b=document.querySelector(`.skill[data-action="${key}"]`);if(!b)continue;const rank=state.ranks[key];b.disabled=rank===0;b.classList.toggle('a06Unlearned',rank===0);b.setAttribute('aria-label',`${a06Names[key]}, ${rank?'rank '+rank:'unlearned'}`);let badge=b.querySelector('.a06Rank');if(!badge){badge=document.createElement('b');badge.className='a06Rank';b.append(badge);}badge.textContent=rank?`R${rank}`:'LEARN';}
+ for(const [key,{skill,plus,badge}]of a06SkillControls){
+  const rank=state.ranks[key],status=upgradeStatus(state,player.level,key);
+  skill.disabled=rank===0;skill.classList.toggle('a06Unlearned',rank===0);
+  skill.setAttribute('aria-label',`${a06Names[key]}, ${rank?'rank '+rank:'unlearned'}`);
+  badge.textContent=rank?`R${rank}`:key==='ult'?'LV 4':'LEARN';
+  plus.hidden=!status.allowed;plus.disabled=!status.allowed;
+  plus.setAttribute('aria-label',`Upgrade ${a06Names[key]} to rank ${rank+1}`);
+  plus.title=`${a06Names[key]} + · ${a06Description(key,rank)}`;
+ }
+ const statStatus=upgradeStatus(state,player.level,'stats');a06QuickStats.hidden=player.level<6||!state.points||state.stats>=5;a06QuickStats.disabled=!statStatus.allowed;
+ a06QuickStats.title=a06Description('stats',state.stats);
+ a06QuickStats.setAttribute('aria-label',`Upgrade stats, ${state.stats} of 5 purchased`);
+ const pointLabel=document.querySelector('#skillPoints');pointLabel.hidden=!state.points;
+ pointLabel.textContent=`${state.points} UPGRADE${state.points===1?'':'S'} · TAP +`;
+
 }
 function a06SetOpen(open){a06Panel.hidden=!open;a06Open.setAttribute('aria-expanded',String(open));}
 a06Open.addEventListener('click',()=>{a06SetOpen(a06Panel.hidden);a06Render();});
 a06Panel.querySelector('#a06Close').addEventListener('click',()=>{a06SetOpen(false);a06Open.focus();});
-a06Panel.addEventListener('click',e=>{const b=e.target.closest('[data-upgrade]');if(!b)return;const key=b.dataset.upgrade;const growth=spendUpgrade(player.upgrades,player.level,key);if(!growth)return;if(key==='stats'){player.maxHp+=growth.health;player.hp=Math.min(player.maxHp,player.hp+growth.health);player.physicalDefense+=growth.physical;player.magicalDefense+=growth.magical;}a05ToastMsg(`${a06Names[key].toUpperCase()} UPGRADED`,'#d5a1ff');a06Render();if(!player.upgrades.points){a06SetOpen(false);a06Open.focus();}else{const next=a06Panel.querySelector(`[data-upgrade="${key}"]:not(:disabled)`)||a06Panel.querySelector('.a06Choice:not(:disabled)');next?.focus();}});
-addEventListener('keydown',e=>{if(e.target.closest?.('input,select,textarea'))return;if(e.repeat)return;if(e.code==='KeyU'){e.preventDefault();a06SetOpen(a06Panel.hidden);a06Render();}if(e.code==='Escape')a06SetOpen(false);});
+function a06Spend(key){
+ const growth=spendUpgrade(player.upgrades,player.level,key);if(!growth)return false;
+ if(key==='stats'){player.maxHp+=growth.health;player.hp=Math.min(player.maxHp,player.hp+growth.health);player.physicalDefense+=growth.physical;player.magicalDefense+=growth.magical;}
+ a05ToastMsg(`${a06Names[key].toUpperCase()} UPGRADED`,'#d5a1ff');a06Render();
+ if(!player.upgrades.points)a06SetOpen(false);
+ return true;
+}
+a06Panel.addEventListener('click',e=>{const b=e.target.closest('[data-upgrade]');if(!b)return;const keyboard=e.detail===0,key=b.dataset.upgrade;if(a06Spend(key)&&keyboard){if(a06Panel.hidden)a06Open.focus();else (a06Panel.querySelector(`[data-upgrade="${key}"]:not(:disabled)`)||a06Panel.querySelector('.a06Choice:not(:disabled)'))?.focus();}});
+
+addEventListener('keydown',e=>{if(gameMode!=='battle')return;if(e.target.closest?.('input,select,textarea'))return;if(e.repeat)return;if(e.code==='KeyU'){e.preventDefault();a06SetOpen(a06Panel.hidden);a06Render();}if(e.code==='Escape')a06SetOpen(false);});
 const a06GainXpBase=a05GainXp;
-a05GainXp=function(amount){a06GainXpBase(amount);const earned=grantLevelPoints(player.upgrades,player.level);if(earned){a06Render();a06SetOpen(true);a05ToastMsg(`+${earned} UPGRADE POINT${earned===1?'':'S'}`,'#d5a1ff');}};
+a05GainXp=function(amount){a06GainXpBase(amount);const earned=grantLevelPoints(player.upgrades,player.level);if(earned){a06Render();a05ToastMsg(`+${earned} UPGRADE POINT${earned===1?'':'S'}`,'#d5a1ff');}};
 function a06Guard(fn,key){return function(...args){if(!player.upgrades.ranks[key]){a05ToastMsg(`LEARN ${a06Names[key].toUpperCase()} FIRST`,'#ffadb7');return;}return fn(...args);};}
 skill1=a06Guard(skill1,'s1');skill2=a06Guard(skill2,'s2');skill3=a06Guard(skill3,'s3');ultimate=a06Guard(ultimate,'ult');
 a06Render();
