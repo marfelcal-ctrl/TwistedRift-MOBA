@@ -1,9 +1,9 @@
 import * as T from 'three';
-import {MATCH} from '../match-rules.mjs';
+import {MATCH} from '../match-rules.mjs?version=alpha081';
 
 // Visual particles are pooled. Projectile callbacks have their own lifetime so
 // lowering graphics or reaching the visual budget never drops combat damage.
-export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x:30,z:28})}){
+export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x:30,z:28}),visibleAt=()=>true,visibleUnit=()=>true}){
   const root=new T.Group();root.name='Combat and ambient effects';scene.add(root);
   const shapes={orb:new T.IcosahedronGeometry(1,1),ring:new T.TorusGeometry(1,.026,6,64),
     arc:new T.RingGeometry(.68,1,56,1,0,Math.PI*1.15),
@@ -22,7 +22,7 @@ export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x
   particleMaterial.customProgramCacheKey=()=> 'rift-particles-v1';
   const pool=new T.InstancedMesh(particleGeometry,particleMaterial,capacity);pool.instanceMatrix.setUsage(T.DynamicDrawUsage);pool.frustumCulled=false;pool.count=0;root.add(pool);
   const dummy=new T.Object3D(),scratchColor=new T.Color();
-  function inView(pos){if(!focus)return true;const p=focus(),bounds=extent();return Math.abs(pos.x-p.x)<bounds.x&&Math.abs(pos.z-p.z)<bounds.z;}
+  function inView(pos){if(!visibleAt(pos))return false;if(!focus)return true;const p=focus(),bounds=extent();return Math.abs(pos.x-p.x)<bounds.x&&Math.abs(pos.z-p.z)<bounds.z;}
   function emit(pos,color,count=16,speed=3,size=.075,lifetime=.6,up=2){
     if(!inView(pos))return;
     count=Math.min(Math.ceil(count*budget/capacity),budget-particles.length);
@@ -76,7 +76,7 @@ export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x
     for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.age+=dt;s.trail+=dt;const q=Math.min(1,s.age/s.duration);if(s.g){s.g.position.lerpVectors(s.from,s.to,q);s.g.position.y+=Math.sin(q*Math.PI)*.22;s.g.rotation.y+=dt*8;if(s.trail>.045){s.trail=0;emit(s.g.position,s.color,3,.4,.065,.26,.1);}}
       if(q>=1){if(s.g)remove(s.g);shots.splice(i,1);burst(s.to.clone().add(new T.Vector3(0,-1,0)),s.color);s.onHit?.();}}
     shield.visible=player.alive&&player.shield>0;if(shield.visible){shield.position.copy(player.group.position).add(new T.Vector3(0,1.25,0));shield.rotation.y=t*.65;shell.material.opacity=.07+Math.sin(t*3)*.02;}
-    const target=player.deadlineTarget;mark.visible=!!(player.alive&&target?.alive&&t<player.deadlineUntil);
+    const target=player.deadlineTarget;mark.visible=!!(player.alive&&target?.alive&&visibleUnit(target)&&t<player.deadlineUntil);
     if(mark.visible){mark.position.copy(target.group?target.group.position:target._group.position);mark.position.y+=3.2;mr.rotation.z=t*1.7;ms.position.y=.7+Math.sin(t*5)*.1;}
     ambientTime+=dt;for(const a of ambients){a.g.rotation.y=t*.18;a.g.children[1].position.y=.14+Math.sin(t*1.3)*.06;if(ambientTime>.15){const angle=Math.random()*Math.PI*2;emit(a.g.position.clone().add(new T.Vector3(Math.sin(angle)*a.radius,0,Math.cos(angle)*a.radius)),a.color,2,.25,.05,2,1);}}
     if(ambientTime>.15){ambientTime=0;const c=camps[Math.floor(Math.random()*camps.length)];if(c){const color={yellow:0xeac36a,purple:0xb461ef,blue:0x5aa7ff,red:0xff664e}[c[2]];emit(new T.Vector3(c[0],.5,c[1]),color,2,.5,.05,1.5,.6);}}
@@ -84,8 +84,13 @@ export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x
     if(renderParticles)present();
   }
   function present(){
-    for(let i=0;i<particles.length;i++){const p=particles[i],q=1-p.age/p.dur;dummy.position.copy(p.p);dummy.rotation.set(p.age*4,i*2.4,p.age*2);dummy.scale.setScalar(p.size*(.25+q*.75));dummy.updateMatrix();pool.setMatrixAt(i,dummy.matrix);pool.setColorAt(i,scratchColor.copy(p.color));life.setX(i,q*q);}
-    pool.count=particles.length;pool.instanceMatrix.needsUpdate=true;if(pool.instanceColor)pool.instanceColor.needsUpdate=true;life.needsUpdate=true;
+    for(const f of effects)f.g.visible=inView(f.g.position);
+    for(const s of shots)if(s.g)s.g.visible=inView(s.g.position);
+    for(const a of ambients)a.g.visible=inView(a.g.position);
+    if(mark.visible)mark.visible=visibleUnit(player.deadlineTarget);
+    let count=0;
+    for(let i=0;i<particles.length;i++){const p=particles[i];if(!inView(p.p))continue;const q=1-p.age/p.dur;dummy.position.copy(p.p);dummy.rotation.set(p.age*4,i*2.4,p.age*2);dummy.scale.setScalar(p.size*(.25+q*.75));dummy.updateMatrix();pool.setMatrixAt(count,dummy.matrix);pool.setColorAt(count,scratchColor.copy(p.color));life.setX(count++,q*q);}
+    pool.count=count;pool.instanceMatrix.needsUpdate=true;if(pool.instanceColor)pool.instanceColor.needsUpdate=true;life.needsUpdate=true;
   }
   return {ring,burst,slash,dash,afterimage,execution,shieldCast,projectile,update,present,emit,
     setBudget(n){budget=T.MathUtils.clamp(Math.round(n),1,capacity);},

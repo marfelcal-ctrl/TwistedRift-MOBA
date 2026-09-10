@@ -2,8 +2,26 @@
 scene.children.filter(o=>o.userData.legacyTerrain).forEach(o=>{o.visible=false;o.removeFromParent();});
 for(const o of [ground,river,pitArena,pitSigil,...campObjects]){o.visible=false;o.removeFromParent();}
 const riftBattlefield=createBattlefield({scene,laneA,laneB,camps,wallSpots});
-const riftVfx=createCombatVfx({scene,player,camps,focus:()=>cameraSmoothedFocus,extent:()=>({x:camera.right+6,z:camera.top/Math.sin(pitch)+6})});
-const riftArt=installRiftArt({scene,player,enemies,towers,cores:[blueCore,redCore],pitlord,pitOwner:a04Pit,minions:a04Minions,jungle:a04Jungle,heightAt:riftBattlefield.heightAt,focus:()=>cameraSmoothedFocus});
+const riftNavigation=riftBattlefield.navigation;
+riftNavigation.resolve(player.group.position,BODY_RADIUS.hero);
+for(const enemy of enemies){riftNavigation.resolve(enemy.group.position,BODY_RADIUS.hero);enemy.spawn.copy(enemy.group.position);}
+for(let i=0;i<a04Jungle.length;i++){const camp=a04Jungle[i];riftNavigation.resolve(camp.spawn,BODY_RADIUS.jungle);camp.group.position.copy(camp.spawn);camps[i][0]=camp.spawn.x;camps[i][1]=camp.spawn.z;}
+player.team=A04_BLUE;for(const enemy of enemies)enemy.team=enemy.type==='stoneback'?'neutral':A04_RED;
+const riftVision=createTeamVision();
+function refreshTeamVision(t=now()){riftVision.refresh([player,...enemies.filter(e=>e.team!== 'neutral'),...a04Minions,...towers.map(t=>t.userData),blueCore.userData,redCore.userData],t);}
+function updateTeamVisibility(t=now()){
+  refreshTeamVision(t);
+  for(const unit of [player,...enemies,...a04Minions,...a04Jungle,a04Pit]){
+    const visible=riftVision.visible(unit);if(unit.group.visible!==visible)renderer.shadowMap.needsUpdate=true;
+    unit.group.visible=visible;
+  }
+}
+function visibleMapUnits(){return [player,...enemies,...a04Minions,...a04Jungle,a04Pit].filter(e=>riftVision.visible(e));}
+updateTeamVisibility();
+const riftFog=createFogOfWar({vision:riftVision,document});
+const riftArt=installRiftArt({scene,player,enemies,towers,cores:[blueCore,redCore],pitlord,pitOwner:a04Pit,minions:a04Minions,jungle:a04Jungle,heightAt:riftBattlefield.heightAt,focus:()=>cameraSmoothedFocus,onModel:model=>riftFog.apply(model)});
+riftFog.apply(scene);riftFog.update(0,true);
+const riftVfx=createCombatVfx({scene,player,camps,focus:()=>cameraSmoothedFocus,extent:()=>({x:Math.abs(Math.cos(yaw))*camera.right+Math.abs(Math.sin(yaw))*camera.top/Math.sin(pitch)+6,z:Math.abs(Math.sin(yaw))*camera.right+Math.abs(Math.cos(yaw))*camera.top/Math.sin(pitch)+6}),visibleAt:pos=>riftVision.effectVisible(pos),visibleUnit:unit=>riftVision.visible(unit)});
 const riftLightSources=[...towers,blueCore,redCore].map(group=>({group,color:group.userData.team==='blue'?0x578dff:0xff4569,height:4,intensity:32}));
 const riftGraphics=installGraphics({scene,renderer,camera,moon,lightSources:riftLightSources,onQuality:q=>riftVfx.setBudget(q.particles)});
 riftArt.update(0);

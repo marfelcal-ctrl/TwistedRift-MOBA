@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <meta name="theme-color" content="#09070d" />
-  <title>Twisted Rift — Alpha 0.8 — Enter the Abyss</title>
-  <link rel="stylesheet" href="styles.css?version=alpha08" />
-  <link rel="stylesheet" href="dark-ui.css?version=alpha08" />
+  <title>Twisted Rift — Alpha 0.8.1 — Enter the Abyss</title>
+  <link rel="stylesheet" href="styles.css?version=alpha081" />
+  <link rel="stylesheet" href="dark-ui.css?version=alpha081" />
   <style>
     #cameraLock{position:absolute;right:18px;top:82px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(9,9,14,.72);color:#f4f1ea;font-size:24px;line-height:1;display:grid;place-items:center;z-index:8;cursor:pointer;touch-action:manipulation}
     #cameraLock:active{transform:scale(.94);background:rgba(70,28,48,.82)}
@@ -27,7 +27,7 @@
     <canvas id="game" tabindex="0" aria-label="Twisted Rift 3D battlefield"></canvas>
 
     <div id="topHud">
-      <div class="brand">TWISTED RIFT <span>ALPHA 0.8 · THE ABYSS AWAITS</span></div>
+      <div class="brand">TWISTED RIFT <span>ALPHA 0.8.1 · THE ABYSS AWAITS</span></div>
       <div id="objective">LEVEL UP · FARM · GEAR UP · BREAK THE RED CORE</div>
       <div id="fps">-- FPS</div>
     </div>
@@ -39,6 +39,7 @@
     </div>
     <div id="objectiveTimers">
       <span id="waveText">WAVE 0</span>
+      <span id="jungleText">JUNGLE: 24s</span>
       <span id="pitlordText">PITLORD: 3:30</span>
     </div>
 
@@ -65,7 +66,7 @@
     </div>
 
     <button id="battleMenu" type="button" aria-label="Open lobby and pause practice">☰ <span>LOBBY</span></button>
-    <div id="alphaNote"><b>ALPHA 0.8 TEST</b><br>Tap the <b>+</b> above a skill to upgrade. <b>U</b> opens details. Stats unlock at level 6; ultimate ranks unlock at levels 4, 6 and 9. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
+    <div id="alphaNote"><b>ALPHA 0.8.1 TEST</b><br>Tap the <b>+</b> above a skill to upgrade. <b>U</b> opens details. Stats unlock at level 6; ultimate ranks unlock at levels 4, 6 and 9. Buy items at Blue Fountain. Press <b>G</b> for practice gold. Press <b>P</b> to force Pitlord.</div>
     <div id="controlsHint">WASD move · Space attack · 1/2/3/4 skills · U upgrades · V recall · B shop · G practice gold · P force Pitlord · R recenter</div>
     <button id="cameraLock" type="button" aria-label="Recenter camera" title="Recenter camera">⌖</button>
 
@@ -108,7 +109,7 @@
         <button data-lobby-tab="Forge" aria-controls="lobbyDrawer" aria-expanded="false"><span aria-hidden="true">⚒</span> Forge <i>04</i></button>
       </nav>
       <div class="heroCaption"><p id="heroAvailability">READY FOR THE DESCENT</p><h1 id="lobbyHeroName">RAMZX</h1><h2 id="lobbyHeroTitle">The Dread Marshal</h2><div class="heroCaptionRule"></div></div>
-      <aside class="lobbyLore"><span>CHAPTER I · THE FRACTURE</span><h2>The Rift remembers.</h2><p>Beyond the iron gates, every victory demands its price.</p><small>ALPHA 0.8</small></aside>
+      <aside class="lobbyLore"><span>CHAPTER I · THE FRACTURE</span><h2>The Rift remembers.</h2><p>Beyond the iron gates, every victory demands its price.</p><small>ALPHA 0.8.1</small></aside>
       <div class="lobbyLaunch"><p id="lobbyMode">TWISTED RIFT · SOLO PRACTICE</p><button id="enterAbyss" type="button"><span id="enterAbyssLabel">ENTER THE ABYSS</span><small>ANSWER THE RIFT’S CALL</small></button></div>
       <section id="lobbyDrawer" aria-labelledby="lobbyDrawerTitle" hidden><header><h2 id="lobbyDrawerTitle"></h2><button id="closeLobbyDrawer" type="button" aria-label="Close lobby panel">×</button></header><div id="lobbyDrawerContent"></div></section>
     </section>
@@ -139,6 +140,6 @@
   <script type="importmap">
   {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"}}
   </script>
-  <script type="module" src="alpha05_bootstrap.js?version=alpha08"></script>
+  <script type="module" src="alpha05_bootstrap.js?version=alpha081"></script>
 </body>
 </html>

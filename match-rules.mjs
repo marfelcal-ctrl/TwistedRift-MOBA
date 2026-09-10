@@ -2,7 +2,8 @@
 export const MATCH = Object.freeze({
   mapScale: .7, worldSize: 84, heroSpeed: 7.2, minionSpeed: 3.2,
   firstWave: 10, waveInterval: 30, siegeEvery: 3,
-  cameraPitch: 58, cameraDistance: 36, cameraHalfHeight: 13.5,
+  jungleFirstSpawn: 24, jungleRespawn: 45,
+  cameraPitch: 54, cameraYaw: 18, cameraDistance: 36, cameraHalfHeight: 11.8,
   fountain: Object.freeze({blue: [-38.5, 38.5], red: [38.5, -38.5]})
 });
 export const mapCoordinate = n => n * MATCH.mapScale;
@@ -20,6 +21,12 @@ export function cameraBounds(width, height) {
   const aspect = Math.max(1, width) / Math.max(1, height);
   const halfHeight = Math.max(MATCH.cameraHalfHeight, MATCH.cameraHalfHeight / aspect);
   return {left: -halfHeight*aspect, right: halfHeight*aspect, top: halfHeight, bottom: -halfHeight};
+}
+// Invert the camera's ground-plane projection. Screen diagonals, joystick
+// direction, aimed skills and dragging all use this same basis.
+export function screenToWorld(dx,dy){
+  const yaw=MATCH.cameraYaw*Math.PI/180,down=dy/Math.sin(MATCH.cameraPitch*Math.PI/180);
+  return {x:dx*Math.cos(yaw)+down*Math.sin(yaw),z:-dx*Math.sin(yaw)+down*Math.cos(yaw)};
 }
 
 // All combat deadlines use this clock. Rendering may be 20, 60, or 120 FPS.
@@ -52,17 +59,19 @@ export function waveFormation(wave) {
 
 // Keep each unit's lateral lane offset through corners. Spend leftover movement
 // on the next segment instead of losing a frame at every waypoint.
-export function moveAlongPath(unit, dt) {
+export function moveAlongPath(unit, dt,move=null) {
   let remaining = unit.speed * dt;
   const p = unit.group.position;
   while (remaining > 1e-8 && unit.index < unit.path.length) {
     const goal = unit.path[unit.index], dx=goal.x-p.x, dz=goal.z-p.z, distance=Math.hypot(dx,dz);
     if (distance < 1e-8) { unit.index++; continue; }
     const step = Math.min(distance, remaining);
-    p.x += dx/distance*step; p.z += dz/distance*step;
+    const x=p.x,z=p.z;
+    if(move)move(p,dx/distance*step,dz/distance*step);else {p.x+=dx/distance*step;p.z+=dz/distance*step;}
     unit.group.rotation.y = Math.atan2(dx,dz);
     remaining -= step;
-    if (step >= distance-1e-8) unit.index++;
+    if (Math.hypot(goal.x-p.x,goal.z-p.z)<1e-7) unit.index++;
+    if (Math.hypot(p.x-x,p.z-z)<step*.99) break;
   }
 }
 
@@ -78,12 +87,12 @@ export class UnitGrid {
       this.cells.get(key).push(unit);
     }
   }
-  nearestEnemy(team, p, range) {
+  nearestEnemy(team, p, range,canSee=()=>true) {
     let best=null, distance=range*range;
     for(let x=Math.floor((p.x-range)/this.cellSize);x<=Math.floor((p.x+range)/this.cellSize);x++)
       for(let z=Math.floor((p.z-range)/this.cellSize);z<=Math.floor((p.z+range)/this.cellSize);z++)
         for(const unit of this.cells.get(`${x},${z}`) || []) {
-          if (!unit.alive || unit.team===team) continue;
+          if (!unit.alive || unit.team===team || !canSee(unit)) continue;
           const d=groundDistanceSq(p,unit.group.position);
           if(d<distance) { distance=d;best=unit; }
         }

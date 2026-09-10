@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {makeHero,heroes,animationClips} from './art/model-factory.mjs';
-import {optimizeModel} from './art/optimize-model.mjs?version=alpha08';
-import {detailMaterial} from './art/graphics.mjs?version=alpha08';
+import {optimizeModel} from './art/optimize-model.mjs?version=alpha081';
+import {detailMaterial} from './art/graphics.mjs?version=alpha081';
 
 // One real 3D preview, sharing the game's renderer and reflection environment.
 // Only the selected hero is built; browsing does not run a second battlefield.
