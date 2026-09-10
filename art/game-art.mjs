@@ -1,12 +1,12 @@
 import * as T from 'three';
-import {MATCH,mapPoints} from '../match-rules.mjs';
+import {MATCH,mapPoints} from '../match-rules.mjs?version=alpha081';
 import {makeHero,makeCreature,makeMinion,makeStructure,makeTerrain,animationClips} from './model-factory.mjs';
-import {optimizeModel} from './optimize-model.mjs?version=alpha08';
-import {detailMaterial} from './graphics.mjs?version=alpha08';
+import {optimizeModel} from './optimize-model.mjs?version=alpha081';
+import {detailMaterial} from './graphics.mjs?version=alpha081';
 
 // Keep combat objects and their original animation references intact. Repeated
 // units share geometry and materials; only their visible models are replaced.
-export function installRiftArt({scene,player,enemies,towers,cores,pitlord,pitOwner,minions,jungle,heightAt=()=>0,focus=()=>player.group.position}){
+export function installRiftArt({scene,player,enemies,towers,cores,pitlord,pitOwner,minions,jungle,heightAt=()=>0,focus=()=>player.group.position,onModel=()=>{}}){
   const animated=[],templates=new Map(),banners=[];let time=0;
   function get(key,build){
     if(!templates.has(key)){
@@ -41,7 +41,7 @@ export function installRiftArt({scene,player,enemies,towers,cores,pitlord,pitOwn
     for(const m of minions){
       if(!m.alive||attachedMinions.has(m))continue;attachedMinions.add(m);
       const type=m.visualType||(m.type==='special'?'siege':m.type);
-      const art=get(m.team+'_'+type,()=>makeMinion(m.team,type));art.scale.setScalar(.85);hideOld(m.group);m.group.add(art);animate(art,m);
+      const art=get(m.team+'_'+type,()=>makeMinion(m.team,type));art.scale.setScalar(.85);onModel(art);hideOld(m.group);m.group.add(art);animate(art,m);
     }
     for(let i=animated.length-1;i>=0;i--){
       const a=animated[i];

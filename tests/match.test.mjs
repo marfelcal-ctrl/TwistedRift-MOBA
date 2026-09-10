@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import * as T from 'three';
-import {MATCH,createMatchClock,cameraBounds,moveAlongPath,UnitGrid,createResolutionController} from '../match-rules.mjs';
+import {MATCH,createMatchClock,cameraBounds,screenToWorld,moveAlongPath,UnitGrid,createResolutionController} from '../match-rules.mjs';
 import {gameHarness} from './helpers/game-harness.mjs';
 
 test('fixed clock advances movement and deadlines equally at 20/30/60/120 FPS',()=>{
@@ -32,12 +32,17 @@ test('nearby targeting ignores dead units, allies and height differences across 
   near.alive=false;assert.equal(grid.nearestEnemy('blue',{x:7.8,z:0},1),null);
   grid.rebuild([]);assert.equal(grid.cells.size,0);
 });
-test('camera keeps blue bottom-left, red top-right and screen-right movement aligned',()=>{
-  const pitch=MATCH.cameraPitch*Math.PI/180,camera=new T.OrthographicCamera();Object.assign(camera,cameraBounds(1920,1080));camera.updateProjectionMatrix();
-  camera.position.set(0,Math.sin(pitch)*MATCH.cameraDistance,Math.cos(pitch)*MATCH.cameraDistance);camera.lookAt(0,0,0);camera.updateMatrixWorld();
-  const blue=new T.Vector3(-10,0,10).project(camera),red=new T.Vector3(10,0,-10).project(camera),right=new T.Vector3(1,0,0).project(camera);
-  assert.ok(blue.x<0&&blue.y<0&&red.x>0&&red.y>0);assert.ok(right.x>0&&Math.abs(right.y)<1e-8);
-  const portrait=cameraBounds(390,844);assert.ok(portrait.right-portrait.left>=27);assert.ok(portrait.top>camera.top);
+test('closer diagonal camera preserves team orientation and projects controls in their screen direction',()=>{
+  const pitch=MATCH.cameraPitch*Math.PI/180,yaw=MATCH.cameraYaw*Math.PI/180,camera=new T.OrthographicCamera();Object.assign(camera,cameraBounds(1920,1080));camera.updateProjectionMatrix();
+  camera.position.set(Math.sin(yaw)*Math.cos(pitch)*MATCH.cameraDistance,Math.sin(pitch)*MATCH.cameraDistance,Math.cos(yaw)*Math.cos(pitch)*MATCH.cameraDistance);camera.lookAt(0,0,0);camera.updateMatrixWorld();
+  const blue=new T.Vector3(-10,0,10).project(camera),red=new T.Vector3(10,0,-10).project(camera);
+  assert.ok(blue.x<0&&blue.y<0&&red.x>0&&red.y>0);assert.ok(MATCH.cameraYaw>=15&&MATCH.cameraYaw<=25);
+  for(const [dx,dy]of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1]]){
+    const direction=screenToWorld(dx,dy),p=new T.Vector3(direction.x,0,direction.z).project(camera),sx=p.x*1920/2,sy=-p.y*1080/2;
+    assert.ok(Math.abs(sx*dy-sy*dx)<1e-7);assert.ok(sx*dx+sy*dy>0);
+  }
+  assert.ok(13.5/camera.top>=1.1&&13.5/camera.top<1.25,'hero screen scale grows a modest amount');
+  const portrait=cameraBounds(390,844);assert.ok(portrait.right-portrait.left>=23.5);assert.ok(portrait.top>camera.top);
 });
 test('adaptive resolution reduces sustained load, has a floor and recovers gradually',()=>{
   const controller=createResolutionController();
@@ -69,14 +74,14 @@ test('actual game: movement at 20 FPS matches 60 FPS, first-wave travel and all 
   const positions=[];
   for(const fps of [20,60]){
     const g=await gameHarness();try{
-      positions.push(g.run(`keys.add('KeyW');for(let i=1;i<=${fps*3};i++)loop(i*1000/${fps});keys.clear();player.group.position.z;`));
+      positions.push(g.run(`player.group.position.set(-38.5,0,20);joy={x:Math.sin(yaw),y:-Math.cos(yaw)*Math.sin(pitch),active:true};for(let i=1;i<=${fps*3};i++)loop(i*1000/${fps});keys.clear();player.group.position.z;`));
       assert.equal(g.run('a04Wave'),0);assert.equal(g.run('a05NearFountain()'),false);
       assert.ok(g.run('[...towers,blueCore,redCore,...a04Jungle.map(j=>j.group)].every(o=>Math.abs(o.position.x)<HALF&&Math.abs(o.position.z)<HALF)'));
       assert.ok(g.run('player.group.position.toArray().every(Number.isFinite)'));
       assert.equal(g.run('ground.parent'),null);assert.equal(g.run('river.parent'),null);
     }finally{await g.dispose();}
   }
-  assert.ok(Math.abs(positions[0]-positions[1])<1e-8);assert.ok(Math.abs(positions[0]-(38.5-MATCH.heroSpeed*3))<1e-8);
+  assert.ok(Math.abs(positions[0]-positions[1])<1e-8);assert.ok(Math.abs(positions[0]-(20-MATCH.heroSpeed*3))<1e-8);
   const g=await gameHarness();try{
     g.run('for(let i=1;i<=99;i++)loop(i*100)');assert.equal(g.run('a04Wave'),0);
     g.run('loop(10000);loop(10100)');assert.equal(g.run('a04Wave'),1);assert.equal(g.run('a04Minions.length'),12);
