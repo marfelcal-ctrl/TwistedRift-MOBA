@@ -23,6 +23,23 @@ test('AI routes around a solid divider; every segment is walkable for its body s
   }
 });
 
+test('sight stops at thin and rotated stone, respects openings and sees over low bridge rails',()=>{
+  const nav=createNavigation({half:16,cell:2});nav.addBox(0,0,.006,3);
+  for(const [a,b]of [[{x:-5,z:0},{x:5,z:0}],[{x:-4,z:4},{x:4,z:-4}],[{x:-4,z:-4},{x:4,z:4}]]){
+    assert.equal(nav.lineOfSight(a,b),false);assert.equal(nav.lineOfSight(b,a),false);
+  }
+  assert.equal(nav.lineOfSight({x:-4,z:4},{x:4,z:4}),true);
+  assert.equal(nav.lineOfSight({x:-4,z:-2},{x:-4,z:2}),true);
+  const rotated=createNavigation({cell:2});rotated.addBox(-3,-2,3,.4,Math.PI/4);
+  const point=(x,z)=>({x:-3+(x+z)*Math.SQRT1_2,z:-2+(-x+z)*Math.SQRT1_2});
+  assert.equal(rotated.lineOfSight(point(0,-3),point(0,3)),false);
+  assert.equal(rotated.lineOfSight(point(-4,1),point(4,1)),true);
+  const gap=createNavigation({cell:2});gap.addBox(0,-2,.3,1.8);gap.addBox(0,2,.3,1.8);
+  const a={x:-4,z:0},b={x:4,z:0};assert.equal(gap.lineOfSight(a,b),true);assert.equal(gap.clear(a,b,BODY_RADIUS.hero),false,'sight is not inflated by body clearance');
+  const bridge=createNavigation();bridge.addBox(0,0,.24,4,0,'bridge rail');bridge.addCircle(2,0,.2,'tree');
+  assert.equal(bridge.clear(a,b),false);assert.equal(bridge.lineOfSight(a,b),true);
+});
+
 test('actual terrain keeps lane routes and jungle entrances connected and bridge rails solid',async()=>{
   const g=await gameHarness();try{
     assert.equal(g.run('riftNavigation.blocked(player.group.position,BODY_RADIUS.hero)'),false);
@@ -43,6 +60,15 @@ test('actual terrain keeps lane routes and jungle entrances connected and bridge
     })`));
     assert.equal(g.run('riftBattlefield.heightAt(-23.1,-23.1)'),.61*.8);
     assert.equal(g.run('riftNavigation.clear({x:-20,z:38},{x:-20,z:25},BODY_RADIUS.hero)'),false,'lane divider blocks the direct shortcut');
+    assert.equal(g.run('riftNavigation.shapes.some(s=>s.kind==="tree")'),false);
+    assert.ok(g.run(`(()=>{
+      const matrix=new THREE.Matrix4();
+      for(const pine of riftBattlefield.root.children.filter(o=>o.isInstancedMesh&&o.name==='pine'))for(let i=0;i<pine.count;i++){
+        pine.getMatrixAt(i,matrix);const center=new THREE.Vector3().setFromMatrixPosition(matrix),start={x:center.x-2,z:center.z},end={x:center.x+2,z:center.z};
+        if(!riftNavigation.clear(start,end,BODY_RADIUS.pitlord))continue;
+        return Object.values(BODY_RADIUS).every(radius=>{const p={...start};riftNavigation.move(p,4,0,radius);return Math.hypot(p.x-end.x,p.z-end.z)<.001;});
+      }return false;
+    })()`),'heroes and all creature sizes can walk through a rendered pine trunk');
   }finally{await g.dispose();}
 });
 

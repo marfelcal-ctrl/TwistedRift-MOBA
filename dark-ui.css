@@ -1,5 +1,7 @@
 :root{--iron:#29272a;--leather:#211919;--ember:#e4532c;--blood:#9e2529;--amber:#e0b574;--parchment:#d2b98f;--panel-edge:#645346;--grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' opacity='.06' filter='url(%23n)' d='M0 0h128v128H0z'/%3E%3C/svg%3E");}
 [hidden]{display:none!important}
+#app #brushStatus{display:inline-block;font:700 8px system-ui;letter-spacing:.04em;color:#bce39b;padding:2px 4px;border:1px solid #6d845a;background:#172018;white-space:nowrap}
+#app #brushStatus[data-concealed="false"]{color:#ffb090;border-color:#ab573d;background:#381913}
 #app[data-mode="lobby"]>:not(#game):not(#lobby):not(#loading):not(#a05Toast):not(#matchFlow){display:none!important}
 #app[data-mode="entry"]>:not(#game):not(#lobby):not(#loading):not(#matchFlow){display:none!important}
 #app[data-mode="battle"] #lobby{display:none}

@@ -7,7 +7,8 @@ riftNavigation.resolve(player.group.position,BODY_RADIUS.hero);
 for(const enemy of enemies){riftNavigation.resolve(enemy.group.position,BODY_RADIUS.hero);enemy.spawn.copy(enemy.group.position);}
 for(let i=0;i<a04Jungle.length;i++){const camp=a04Jungle[i];riftNavigation.resolve(camp.spawn,BODY_RADIUS.jungle);camp.group.position.copy(camp.spawn);camps[i][0]=camp.spawn.x;camps[i][1]=camp.spawn.z;}
 player.team=A04_BLUE;for(const enemy of enemies)enemy.team=enemy.type==='stoneback'?'neutral':A04_RED;
-const riftVision=createTeamVision();
+const riftVision=createTeamVision({lineOfSight:riftNavigation.lineOfSight,sightRevision:()=>riftNavigation.revision});
+const riftBrushStatus=document.querySelector('#brushStatus');
 function refreshTeamVision(t=now()){riftVision.refresh([player,...enemies.filter(e=>e.team!== 'neutral'),...a04Minions,...towers.map(t=>t.userData),blueCore.userData,redCore.userData],t);}
 function updateTeamVisibility(t=now()){
   refreshTeamVision(t);
@@ -15,12 +16,18 @@ function updateTeamVisibility(t=now()){
     const visible=riftVision.visible(unit);if(unit.group.visible!==visible)renderer.shadowMap.needsUpdate=true;
     unit.group.visible=visible;
   }
+  const inBrush=player.alive&&riftVision.brushAt(player.group.position)!==-1;
+  player.concealed=inBrush&&!riftVision.visible(player,A04_RED);
+  if(riftBrushStatus.hidden===inBrush)riftBrushStatus.hidden=!inBrush;
+  const text=player.concealed?'HIDDEN':'REVEALED';if(riftBrushStatus.textContent!==text)riftBrushStatus.textContent=text;
+  const concealed=String(player.concealed);if(riftBrushStatus.dataset.concealed!==concealed)riftBrushStatus.dataset.concealed=concealed;
 }
 function visibleMapUnits(){return [player,...enemies,...a04Minions,...a04Jungle,a04Pit].filter(e=>riftVision.visible(e));}
 updateTeamVisibility();
 const riftFog=createFogOfWar({vision:riftVision,document});
 const riftArt=installRiftArt({scene,player,enemies,towers,cores:[blueCore,redCore],pitlord,pitOwner:a04Pit,minions:a04Minions,jungle:a04Jungle,heightAt:riftBattlefield.heightAt,focus:()=>cameraSmoothedFocus,onModel:model=>riftFog.apply(model)});
 riftFog.apply(scene);riftFog.update(0,true);
+const riftBrush=createBrushAppearance(player.group.getObjectByName('ramzx'));
 const riftVfx=createCombatVfx({scene,player,camps,focus:()=>cameraSmoothedFocus,extent:()=>({x:Math.abs(Math.cos(yaw))*camera.right+Math.abs(Math.sin(yaw))*camera.top/Math.sin(pitch)+6,z:Math.abs(Math.sin(yaw))*camera.right+Math.abs(Math.cos(yaw))*camera.top/Math.sin(pitch)+6}),visibleAt:pos=>riftVision.effectVisible(pos),visibleUnit:unit=>riftVision.visible(unit)});
 const riftLightSources=[...towers,blueCore,redCore].map(group=>({group,color:group.userData.team==='blue'?0x578dff:0xff4569,height:4,intensity:32}));
 const riftGraphics=installGraphics({scene,renderer,camera,moon,lightSources:riftLightSources,onQuality:q=>riftVfx.setBudget(q.particles)});
@@ -60,4 +67,4 @@ a07Select.addEventListener('change',()=>{a07Select.value=riftGraphics.setQuality
 const a08Adaptive=a07Graphics.querySelector('#adaptiveResolution');a08Adaptive.checked=riftGraphics.adaptive;
 a08Adaptive.addEventListener('change',()=>riftGraphics.setAdaptive(a08Adaptive.checked));
 
-function updateAlpha07(dt,t){riftArt.update(dt);riftBattlefield.update(t);}
+function updateAlpha07(dt,t){riftArt.update(dt);riftBrush.update(player.concealed,dt);riftBattlefield.update(t);}

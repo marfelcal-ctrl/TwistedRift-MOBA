@@ -1,9 +1,9 @@
 import * as T from 'three';
-import {MATCH,mapCoordinate,mapPoints} from '../match-rules.mjs?version=alpha081';
+import {MATCH,mapCoordinate,mapPoints} from '../match-rules.mjs?version=alpha082';
 import {makeTerrain} from './model-factory.mjs';
-import {optimizeModel} from './optimize-model.mjs?version=alpha081';
-import {BRUSHES} from '../vision-rules.mjs?version=alpha081';
-import {createNavigation,LANE_BARRIERS} from '../navigation.mjs?version=alpha081';
+import {optimizeModel} from './optimize-model.mjs?version=alpha082';
+import {BRUSHES} from '../vision-rules.mjs?version=alpha082';
+import {createNavigation,LANE_BARRIERS} from '../navigation.mjs?version=alpha082';
 // Repeated terrain shares geometry and materials through GPU instancing.
 export function createBattlefield({scene,laneA,laneB,camps,wallSpots=[]}){
  const S=MATCH.mapScale,half=MATCH.worldSize/2;
@@ -13,7 +13,8 @@ export function createBattlefield({scene,laneA,laneB,camps,wallSpots=[]}){
    if(!templates.has(type)){const model=optimizeModel(makeTerrain(type));templates.set(type,model);bounds.set(type,new T.Box3().setFromObject(model,true));}
    if(!placements.has(type))placements.set(type,[]);const m=new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yaw),new T.Vector3(scale,scale,scale));placements.get(type).push(m);
    if(type==='cliff'||type==='ruin_wall'){const box=bounds.get(type),center=box.getCenter(new T.Vector3()).applyMatrix4(m),size=box.getSize(new T.Vector3()).multiplyScalar(scale);navigation.addBox(center.x,center.z,size.x/2,size.z/2,yaw,type);}
-   if(type==='pine')navigation.addCircle(x,z,.17*scale,'tree');
+   // Pines are decorative and passable; only stone terrain and bridge rails
+   // contribute movement collision. Tall-grass pockets handle concealment.
    if(type==='bridge')for(const side of [-1,1]){const p=new T.Vector3(side*3,0,0).applyMatrix4(m);navigation.addBox(p.x,p.z,.3*scale,6*scale,yaw,'bridge rail');}
  }
  function segmentDistance(x,z,a,b){const dx=b[0]-a[0],dz=b[1]-a[1],t=T.MathUtils.clamp(((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz),0,1);return Math.hypot(x-a[0]-dx*t,z-a[1]-dz*t);}
