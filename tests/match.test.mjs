@@ -36,13 +36,37 @@ test('closer diagonal camera preserves team orientation and projects controls in
   const pitch=MATCH.cameraPitch*Math.PI/180,yaw=MATCH.cameraYaw*Math.PI/180,camera=new T.OrthographicCamera();Object.assign(camera,cameraBounds(1920,1080));camera.updateProjectionMatrix();
   camera.position.set(Math.sin(yaw)*Math.cos(pitch)*MATCH.cameraDistance,Math.sin(pitch)*MATCH.cameraDistance,Math.cos(yaw)*Math.cos(pitch)*MATCH.cameraDistance);camera.lookAt(0,0,0);camera.updateMatrixWorld();
   const blue=new T.Vector3(-10,0,10).project(camera),red=new T.Vector3(10,0,-10).project(camera);
-  assert.ok(blue.x<0&&blue.y<0&&red.x>0&&red.y>0);assert.ok(MATCH.cameraYaw>=15&&MATCH.cameraYaw<=25);
+  assert.ok(blue.x<0&&blue.y<0&&red.x>0&&red.y>0);assert.ok(MATCH.cameraYaw>=20&&MATCH.cameraYaw<=35);
   for(const [dx,dy]of [[1,0],[0,1],[-1,0],[0,-1],[1,1],[-1,1]]){
     const direction=screenToWorld(dx,dy),p=new T.Vector3(direction.x,0,direction.z).project(camera),sx=p.x*1920/2,sy=-p.y*1080/2;
     assert.ok(Math.abs(sx*dy-sy*dx)<1e-7);assert.ok(sx*dx+sy*dy>0);
   }
-  assert.ok(13.5/camera.top>=1.1&&13.5/camera.top<1.25,'hero screen scale grows a modest amount');
-  const portrait=cameraBounds(390,844);assert.ok(portrait.right-portrait.left>=23.5);assert.ok(portrait.top>camera.top);
+  const portrait=cameraBounds(390,844);assert.ok(portrait.right-portrait.left>=19);assert.ok(portrait.top>camera.top);
+});
+
+test('actual phone camera keeps the hero readable in both orientations without widening the combat body',async()=>{
+  const sizes=[];
+  for(const [width,height]of [[844,390],[390,844]]){
+    const g=await gameHarness({width,height});try{
+      const report=JSON.parse(g.run(`JSON.stringify((()=>{
+        player.group.position.set(0,0,0);cameraSmoothedFocus.set(0,0,0);loop(0);
+        const model=player.group.getObjectByName('ramzx'),sizes=[];
+        for(const angle of [0,Math.PI/2,Math.PI,Math.PI*1.5]){
+          player.group.rotation.y=angle;scene.updateMatrixWorld(true);const box=new THREE.Box2();
+          model.traverseVisible(o=>{if(o.isMesh){const a=o.geometry.attributes.position;for(let i=0;i<a.count;i++){
+            const v=new THREE.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld).project(camera);
+            box.expandByPoint(new THREE.Vector2((v.x+1)*innerWidth/2,(1-v.y)*innerHeight/2));
+          }}});sizes.push({width:box.max.x-box.min.x,height:box.max.y-box.min.y,left:box.min.x,right:box.max.x,top:box.min.y,bottom:box.max.y});
+        }return {sizes,bodyRadius:BODY_RADIUS.hero,speed:player.speed};
+      })())`));
+      for(const frame of report.sizes){
+        assert.ok(frame.height>=50&&frame.height<=70,`${width}×${height}: ${JSON.stringify(frame)}`);
+        assert.ok(frame.left>width*.25&&frame.right<width*.75&&frame.top>height*.25&&frame.bottom<height*.75,'hero stays in the central touch-free view');
+      }
+      assert.equal(report.bodyRadius,.55);assert.equal(report.speed,7.2);sizes.push(report.sizes[0]);
+    }finally{await g.dispose();}
+  }
+  assert.ok(Math.abs(sizes[0].height-sizes[1].height)<1e-5,'rotating a phone preserves the hero’s pixel height');
 });
 test('adaptive resolution reduces sustained load, has a floor and recovers gradually',()=>{
   const controller=createResolutionController();

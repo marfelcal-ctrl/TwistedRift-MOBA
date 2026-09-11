@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {cameraBounds,createResolutionController} from '../match-rules.mjs?version=alpha081';
+import {cameraBounds,createResolutionController} from '../match-rules.mjs?version=alpha082';
 import {EffectComposer} from './postprocessing/EffectComposer.js';
 import {RenderPass} from './postprocessing/RenderPass.js';
 import {UnrealBloomPass} from './postprocessing/UnrealBloomPass.js';

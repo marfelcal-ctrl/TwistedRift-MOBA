@@ -3,7 +3,8 @@ export const MATCH = Object.freeze({
   mapScale: .7, worldSize: 84, heroSpeed: 7.2, minionSpeed: 3.2,
   firstWave: 10, waveInterval: 30, siegeEvery: 3,
   jungleFirstSpawn: 24, jungleRespawn: 45,
-  cameraPitch: 54, cameraYaw: 18, cameraDistance: 36, cameraHalfHeight: 11.8,
+  cameraPitch: 49, cameraYaw: 26, cameraDistance: 36, cameraHalfHeight: 9.5,
+  heroModelScale: Object.freeze([.68,.86,.68]),
   fountain: Object.freeze({blue: [-38.5, 38.5], red: [38.5, -38.5]})
 });
 export const mapCoordinate = n => n * MATCH.mapScale;

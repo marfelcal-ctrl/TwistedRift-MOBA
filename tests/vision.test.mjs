@@ -5,6 +5,8 @@ import {createTeamVision} from '../vision-rules.mjs';
 import {createCombatVfx} from '../art/combat-vfx.mjs';
 import {createFogOfWar} from '../art/fog-of-war.mjs';
 import {createBattlefield} from '../art/battlefield.mjs';
+import {createNavigation} from '../navigation.mjs';
+import {createBrushAppearance} from '../art/brush-appearance.mjs';
 import {gameHarness} from './helpers/game-harness.mjs';
 
 const unit=(team,x,z,kind='hero')=>({team,alive:true,kind,group:{position:{x,y:0,z}}});
@@ -28,6 +30,76 @@ test('grass conceals enemies until an ally enters or nearby combat briefly revea
   hero.group.position.x=-1;assert.equal(vision.visible(enemy),true);
   hero.group.position.x=-4;assert.equal(vision.visible(enemy),false);
   vision.reveal(enemy,'blue',2.01);hero.group.position.x=-30;assert.equal(vision.visible(enemy),false,'combat reveal cannot track an enemy across the map');
+});
+
+test('terrain cuts team sight, fog and combat reveals; living allies can reveal the other side',()=>{
+  const nav=createNavigation();nav.addBox(0,0,.4,5);
+  let rays=0;const vision=createTeamVision({brushes:[],lineOfSight:(a,b)=>{rays++;return nav.lineOfSight(a,b);},sightRevision:()=>nav.revision});
+  const hero=unit('blue',-4,0),enemy=unit('red',4,0),scout=unit('blue',5,0,'minion');
+  const sample=(mask,x,z)=>mask[Math.floor((z+42)/84*128)*128+Math.floor((x+42)/84*128)];
+  vision.refresh([hero,enemy],0);assert.equal(vision.visible(enemy),false);assert.equal(vision.visible(hero,'red'),false);
+  vision.reveal(enemy,'blue');assert.equal(vision.visible(enemy),false);assert.equal(vision.effectVisible(enemy.group.position),false);
+  const mask=vision.rasterize();assert.equal(sample(mask,4,0),0);assert.ok(sample(mask,-4,3)>0);
+  const count=rays;vision.rasterize();assert.equal(rays-count,1,'stationary masks reuse their rays; only the live combat-reveal query remains');
+  vision.refresh([hero,enemy,scout],.1);assert.equal(vision.visible(enemy),true);assert.ok(sample(vision.rasterize(),4,0)>0);
+  scout.alive=false;assert.equal(vision.visible(enemy),false);assert.equal(sample(vision.rasterize(),4,0),0);
+  hero.group.position.z=7;enemy.group.position.z=7;assert.equal(vision.visible(enemy),true);assert.ok(sample(vision.rasterize(),4,7)>0);
+  nav.addBox(0,7,.4,1);assert.equal(vision.visible(enemy),false);assert.equal(sample(vision.rasterize(),4,7),0,'terrain revisions invalidate cached masks');
+});
+
+test('brush exposure never leaks through walls, including nearby effects and neutral aggro',()=>{
+  const nav=createNavigation(),vision=createTeamVision({brushes:[{x:0,z:0,rx:2,rz:2}],lineOfSight:nav.lineOfSight,sightRevision:()=>nav.revision});
+  const hero=unit('blue',-4,0),enemy=unit('red',0,0),monster=unit('neutral',-3,0,'jungle');
+  vision.refresh([hero,enemy],0);assert.equal(vision.canSee(monster,enemy,7.2),false);
+  vision.reveal(enemy,'blue');assert.equal(vision.visible(enemy),true);assert.equal(vision.canSee(monster,enemy,7.2),true);
+  nav.addBox(.5,0,.04,2);assert.equal(vision.effectVisible({x:1,z:0}),false);
+  const mask=vision.rasterize();assert.equal(mask[64*128+65],0,'the reveal halo cannot light the far side of a wall');
+  nav.addBox(-1,0,.04,2);assert.equal(vision.visible(enemy),false);assert.equal(vision.canSee(monster,enemy,7.2),false);
+});
+
+test('actual walls hide nearby enemies, camps and Pitlord from models, minimap, effects and target selection',async()=>{
+  const g=await gameHarness();try{
+    g.run(`for(const t of towers)t.userData.alive=false;blueCore.userData.alive=redCore.userData.alive=false;
+      a04SpawnWave();for(const m of a04Minions)m.alive=false;
+      var hiddenMinion=a04SpawnMinion('red','A','melee');a04UpdateJungle(0,24);a04SpawnPit(true);
+      var hiddenUnits=[enemies[0],hiddenMinion,a04Jungle[0],a04Pit];
+      player.group.position.set(-20,0,36);for(const u of hiddenUnits)u.group.position.set(-20,0,28);updateTeamVisibility();riftFog.update(0,true);`);
+    assert.ok(g.run('hiddenUnits.every(u=>u.alive&&!u.group.visible&&!visibleMapUnits().includes(u)&&nearest(Infinity)!==u)'));
+    assert.equal(g.run('riftVision.effectVisible({x:-20,z:28})'),false);
+    assert.equal(g.run('riftFog.texture.image.data[Math.floor((28+42)/84*128)*128+Math.floor((-20+42)/84*128)]'),0);
+    g.run('for(const u of hiddenUnits)riftVision.reveal(u,"blue");updateTeamVisibility()');assert.ok(g.run('hiddenUnits.every(u=>!u.group.visible)'));
+    g.run('var scout=a04SpawnMinion("blue","A","melee");scout.group.position.set(-20,0,27);updateTeamVisibility()');assert.ok(g.run('hiddenUnits.every(u=>u.group.visible&&visibleMapUnits().includes(u))'));
+    g.run('scout.alive=false;updateTeamVisibility()');assert.ok(g.run('hiddenUnits.every(u=>!u.group.visible)'));
+  }finally{await g.dispose();}
+});
+
+test('the local hero conceals in grass, stops enemy pursuit, and displays combat exposure until it expires',async()=>{
+  const g=await gameHarness();try{
+    g.run(`for(const t of towers)t.userData.alive=false;blueCore.userData.alive=redCore.userData.alive=false;for(const e of enemies.slice(1))e.alive=false;
+      var b=BRUSHES[6],guard=enemies[0];player.group.position.set(b.x,0,b.z);guard.group.position.set(b.x,0,b.z+b.rz+.5);
+      updateTeamVisibility();updateAlpha07(.2,now());var guardStart=guard.group.position.clone();a03UpdateEnemies(.5,now());`);
+    assert.equal(g.run('player.concealed'),true);assert.equal(g.run('player.group.visible'),true);
+    assert.equal(g.document.querySelector('#brushStatus').textContent,'HIDDEN');assert.equal(g.document.querySelector('#brushStatus').hidden,false);
+    assert.equal(g.run('guard.group.position.distanceTo(guardStart)'),0);assert.equal(g.run('riftVision.visible(player,"red")'),false);
+    g.run('guard.group.position.set(b.x+.4,0,b.z);updateTeamVisibility()');assert.equal(g.run('player.concealed'),false);assert.equal(g.document.querySelector('#brushStatus').textContent,'REVEALED');
+    g.run('guard.group.position.copy(guardStart);updateTeamVisibility()');assert.equal(g.run('player.concealed'),true);
+    g.run('player.facing.set(0,0,1);a06Spend("s1");skill1();updateTeamVisibility()');assert.equal(g.run('player.concealed'),false);assert.equal(g.document.querySelector('#brushStatus').textContent,'REVEALED');
+    g.run('updateTeamVisibility(now()+2.01)');assert.equal(g.run('player.concealed'),true);
+    g.run('player.group.position.z+=b.rz+.8;updateTeamVisibility(now()+2.02)');assert.equal(g.run('player.concealed'),false);assert.equal(g.document.querySelector('#brushStatus').hidden,true);
+    g.run('player.alive=false;updateTeamVisibility()');assert.equal(g.run('player.group.visible'),false);assert.equal(g.document.querySelector('#brushStatus').hidden,true);
+  }finally{await g.dispose();}
+});
+
+test('local brush fading preserves fog shaders, opaque depth and other heroes’ shared materials',()=>{
+  const context={createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4)}),putImageData(){}},document={createElement:()=>({getContext:()=>context})};
+  const vision=createTeamVision(),fog=createFogOfWar({vision,document}),original=new T.MeshStandardMaterial(),local=new T.Mesh(new T.BoxGeometry(),original),other=local.clone();
+  const scene=new T.Scene();scene.add(local,other);fog.apply(scene);const shared=other.material,appearance=createBrushAppearance(local);
+  assert.notEqual(local.material,shared);assert.equal(other.material,shared);assert.equal(local.material.transparent,false);assert.equal(local.material.depthWrite,true);
+  const shader={vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader,uniforms:{}};local.material.onBeforeCompile(shader,{});
+  assert.ok(shader.uniforms.riftVisionMap);assert.ok(shader.uniforms.riftBrushFade);assert.match(shader.fragmentShader,/riftBrushPattern<riftBrushFade\*\.5/);
+  appearance.update(true,.2);assert.equal(shader.uniforms.riftBrushFade.value,1);appearance.update(false,.2);assert.equal(shader.uniforms.riftBrushFade.value,0);
+  const otherShader={vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader,uniforms:{}};other.material.onBeforeCompile(otherShader,{});assert.equal(otherShader.uniforms.riftBrushFade,undefined);
+  appearance.dispose();fog.dispose();
 });
 
 test('jungle first appears at 0:24 match time, pauses in lobby, and respawns only after its defeat timer',async()=>{

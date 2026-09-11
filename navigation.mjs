@@ -7,7 +7,7 @@ export const LANE_BARRIERS=Object.freeze([-1,1].flatMap(side=>[
 ]));
 
 export function createNavigation({half=42,cell=4}={}){
-  const shapes=[],buckets=new Map(),paths=new WeakMap(),grids=new Map();let revision=0;
+  const shapes=[],buckets=new Map(),paths=new WeakMap(),grids=new Map();let revision=0,sightRay=0;
   const clamp=(v,r)=>Math.max(-half+r+.1,Math.min(half-r-.1,v));
   function add(shape){shape.id=shapes.length;shape.c=Math.cos(shape.yaw||0);shape.s=Math.sin(shape.yaw||0);
     const extent=shape.radius||Math.hypot(shape.hx,shape.hz);shapes.push(shape);
@@ -33,6 +33,38 @@ export function createNavigation({half=42,cell=4}={}){
   }
   function clear(a,b,r=.55){const distance=Math.hypot(b.x-a.x,b.z-a.z),steps=Math.max(1,Math.ceil(distance/.25));
     for(let i=0;i<=steps;i++){const t=i/steps;if(blocked({x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t},r))return false;}return true;}
+  // Sight uses an exact segment against the rendered terrain footprints, with
+  // no body-radius inflation. Low bridge rails and foliage do not block sight.
+  function intersectsSight(a,dx,dz,s){
+    const ax=a.x-s.x,az=a.z-s.z;
+    if(s.radius){const lengthSq=dx*dx+dz*dz,t=Math.max(0,Math.min(1,-(ax*dx+az*dz)/lengthSq));return (ax+dx*t)**2+(az+dz*t)**2<=s.radius*s.radius;}
+    const x=s.c*ax-s.s*az,z=s.s*ax+s.c*az,vx=s.c*dx-s.s*dz,vz=s.s*dx+s.c*dz;
+    let enter=0,exit=1;
+    if(Math.abs(vx)<1e-10){if(Math.abs(x)>s.hx)return false;}
+    else {const t0=(-s.hx-x)/vx,t1=(s.hx-x)/vx;enter=Math.max(enter,Math.min(t0,t1));exit=Math.min(exit,Math.max(t0,t1));}
+    if(Math.abs(vz)<1e-10){if(Math.abs(z)>s.hz)return false;}
+    else {const t0=(-s.hz-z)/vz,t1=(s.hz-z)/vz;enter=Math.max(enter,Math.min(t0,t1));exit=Math.min(exit,Math.max(t0,t1));}
+    return enter<=exit&&exit>1e-7&&enter<1-1e-7;
+  }
+  function lineOfSight(a,b){
+    const dx=b.x-a.x,dz=b.z-a.z;if(dx*dx+dz*dz<1e-12)return true;
+    const stamp=++sightRay,endX=Math.floor(b.x/cell),endZ=Math.floor(b.z/cell),sx=Math.sign(dx),sz=Math.sign(dz);
+    let x=Math.floor(a.x/cell),z=Math.floor(a.z/cell);
+    const deltaX=dx?cell/Math.abs(dx):Infinity,deltaZ=dz?cell/Math.abs(dz):Infinity;
+    let nextX=dx?((x+(sx>0?1:0))*cell-a.x)/dx:Infinity,nextZ=dz?((z+(sz>0?1:0))*cell-a.z)/dz:Infinity;
+    const steps=Math.abs(endX-x)+Math.abs(endZ-z)+1;
+    for(let i=0;i<=steps;i++){
+      for(const s of buckets.get(x+','+z)||[]){
+        if(s.sightRay===stamp||s.kind==='tree'||s.kind==='bridge rail')continue;s.sightRay=stamp;
+        if(intersectsSight(a,dx,dz,s))return false;
+      }
+      if(x===endX&&z===endZ)return true;
+      if(nextX<nextZ){x+=sx;nextX+=deltaX;}
+      else if(nextZ<nextX){z+=sz;nextZ+=deltaZ;}
+      else {x+=sx;z+=sz;nextX+=deltaX;nextZ+=deltaZ;}
+    }
+    return true;
+  }
   // A one-unit static navigation grid is cached per body radius. AI paths are
   // reused until a target moves or terrain changes; combat never allocates a
   // new path on every frame.
@@ -70,5 +102,5 @@ export function createNavigation({half=42,cell=4}={}){
       if(Math.hypot(p.x-goal.x,p.z-goal.z)<.03)route.index++;
     }return p;
   }
-  return {addBox:(x,z,hx,hz,yaw=0,kind='wall')=>add({x,z,hx,hz,yaw,kind}),addCircle:(x,z,radius,kind='tree')=>add({x,z,radius,kind}),blocked,resolve,move,clear,findPath,steer,shapes};
+  return {addBox:(x,z,hx,hz,yaw=0,kind='wall')=>add({x,z,hx,hz,yaw,kind}),addCircle:(x,z,radius,kind='tree')=>add({x,z,radius,kind}),blocked,resolve,move,clear,lineOfSight,findPath,steer,shapes,get revision(){return revision;}};
 }

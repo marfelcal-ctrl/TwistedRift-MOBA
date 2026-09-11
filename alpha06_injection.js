@@ -4,7 +4,7 @@ player.upgrades=createUpgrades(player.heroId);
 player.physicalDefense=0;
 player.magicalDefense=0;
 // Scale the model, not combat reach or the movement coordinates.
-player.group.scale.set(.62,.72,.62);
+player.group.scale.set(...MATCH.heroModelScale);
 
 const a06Style=document.createElement('style');
 a06Style.textContent=`

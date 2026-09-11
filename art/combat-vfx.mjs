@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {MATCH} from '../match-rules.mjs?version=alpha081';
+import {MATCH} from '../match-rules.mjs?version=alpha082';
 
 // Visual particles are pooled. Projectile callbacks have their own lifetime so
 // lowering graphics or reaching the visual budget never drops combat damage.

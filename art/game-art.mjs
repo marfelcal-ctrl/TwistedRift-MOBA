@@ -1,8 +1,8 @@
 import * as T from 'three';
-import {MATCH,mapPoints} from '../match-rules.mjs?version=alpha081';
+import {MATCH,mapPoints} from '../match-rules.mjs?version=alpha082';
 import {makeHero,makeCreature,makeMinion,makeStructure,makeTerrain,animationClips} from './model-factory.mjs';
-import {optimizeModel} from './optimize-model.mjs?version=alpha081';
-import {detailMaterial} from './graphics.mjs?version=alpha081';
+import {optimizeModel} from './optimize-model.mjs?version=alpha082';
+import {detailMaterial} from './graphics.mjs?version=alpha082';
 
 // Keep combat objects and their original animation references intact. Repeated
 // units share geometry and materials; only their visible models are replaced.
@@ -25,7 +25,7 @@ export function installRiftArt({scene,player,enemies,towers,cores,pitlord,pitOwn
   }
   function hideOld(group,keep=[]){for(const c of [...group.children])if(!keep.includes(c)){c.visible=false;c.removeFromParent();}}
   const hero=get('ramzx',()=>makeHero('ramzx'));hideOld(player.group,player.group.children.filter(x=>x.geometry?.type==='RingGeometry'));player.group.add(hero);animate(hero,player,true);
-  for(const e of enemies){const id=e.type==='stoneback'?'stoneback':'kaelor';const m=get(id,()=>e.type==='stoneback'?makeCreature(id):makeHero(id));if(e.type!=='stoneback')m.scale.set(.62,.72,.62);hideOld(e.group,[e.hb]);e.group.add(m);animate(m,e);}
+  for(const e of enemies){const id=e.type==='stoneback'?'stoneback':'kaelor';const m=get(id,()=>e.type==='stoneback'?makeCreature(id):makeHero(id));if(e.type!=='stoneback')m.scale.set(...MATCH.heroModelScale);hideOld(e.group,[e.hb]);e.group.add(m);animate(m,e);}
   for(const t of towers){const m=get(t.userData.team+'_'+t.userData.stage,()=>makeStructure(t.userData.team,t.userData.stage>=2?'defense_tower':'tower'));hideOld(t);t.add(m);t.userData.crystal=m.getObjectByName('crystal');}
   for(const c of cores){const m=get(c.userData.team+'_core',()=>makeStructure(c.userData.team,'core'));hideOld(c);c.add(m);c.userData.crystal=m.getObjectByName('crystal');}
   const boss=get('pitlord',()=>makeCreature('pitlord'));hideOld(pitlord);pitlord.add(boss);animate(boss,pitOwner||{group:pitlord});
