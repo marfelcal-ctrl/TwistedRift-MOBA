@@ -1,0 +1,3 @@
+assets/models/*.bin binary
+assets/portraits/*.webp binary
+assets/models/textures/*.webp binary

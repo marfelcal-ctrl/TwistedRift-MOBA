@@ -1,0 +1,177 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 768,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 510,
+      "max": [
+        32767,
+        23823,
+        410
+      ],
+      "min": [
+        -32767,
+        -23823,
+        -410
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 510,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 2
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 1536,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 273,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 768
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 1536,
+      "byteLength": 4080,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 276,
+          "byteLength": 2440,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 510
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 5616,
+      "byteLength": 4080,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2716,
+          "byteLength": 1311,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 510
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "fx_arc.bin",
+      "byteLength": 4028
+    },
+    {
+      "byteLength": 9696,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "Rift VFX",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.949999988079071,
+          0.07000000029802322,
+          0.019999999552965164,
+          1
+        ],
+        "roughnessFactor": 0.4000000059604645,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_arc",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "fx_arc",
+      "extras": {
+        "riftAsset": "fx_arc",
+        "category": "Effects"
+      },
+      "translation": [
+        0.00009638071060180664,
+        0.2729806452989578,
+        -0.012500000186264515
+      ],
+      "scale": [
+        0.9999036192893982,
+        0.9999036192893982,
+        0.9999036192893982
+      ],
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

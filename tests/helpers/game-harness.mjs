@@ -22,12 +22,12 @@ export async function gameHarness({enter=true,width=1440,height=900}={}){
   window.HTMLCanvasElement.prototype.getContext=function(){return new Proxy({createImageData:(w,h)=>({data:new Uint8ClampedArray(w*h*4),width:w,height:h})},{get:(o,k)=>o[k]??(()=>{})});};
   window.HTMLElement.prototype.setPointerCapture=function(){};
   const bootstrap=await fs.readFile(new URL('alpha05_bootstrap.js',dir),'utf8');
-  const capture={document:window.document,console,URL,Blob,location:{href:'https://example.invalid/'},setTimeout(){},fetch:async path=>({ok:true,text:()=>fs.readFile(new URL(path.split('?')[0],dir),'utf8')})};
+  const capture={preloadBlenderAssets:async()=>({loaded:0,failed:[]}),document:window.document,console,URL,Blob,location:{href:'https://example.invalid/'},setTimeout(){},fetch:async path=>({ok:true,text:()=>fs.readFile(new URL(path.split('?')[0],dir),'utf8')})};
   vm.createContext(capture);
-  await vm.runInContext('(async()=>{'+bootstrap.replace('await import(url);','globalThis.captured=source;URL.revokeObjectURL(url);')+'})()',capture);
+  await vm.runInContext('(async()=>{'+bootstrap.replace(/^import .*;\n/gm,'').replace('await import(url);','globalThis.captured=source;URL.revokeObjectURL(url);')+'})()',capture);
   assert.ok(capture.captured,'actual bootstrap must assemble source');
   class Renderer {constructor(){this.shadowMap={};}setPixelRatio(){}setSize(){}}
-  const context=vm.createContext({THREE:{...T,WebGLRenderer:Renderer},...progression,...rules,...vision,BODY_RADIUS,createFogOfWar,createBrushAppearance,createBattlefield,installRiftArt,createCombatVfx,createLobby,createMatchFlow,
+  const context=vm.createContext({THREE:{...T,WebGLRenderer:Renderer},...progression,...rules,...vision,BODY_RADIUS,createFogOfWar,createBrushAppearance,createBattlefield,installRiftArt,createCombatVfx,createLobby:args=>createLobby({...args,portraitLoader(){throw Error('Image decoder not available in CPU harness');}}),createMatchFlow,
     installGraphics({onQuality,camera}){let quality='maximum',adaptive=true;onQuality(QUALITY_PRESETS[quality]);return {get quality(){return quality;},get adaptive(){return adaptive;},setAdaptive(v){adaptive=v;},setQuality(q){quality=q;onQuality(QUALITY_PRESETS[q]);return q;},render(){},renderStage(){},resize(w=width,h=height){Object.assign(camera,rules.cameraBounds(w,h));camera.updateProjectionMatrix();}};},
     document:window.document,console,innerWidth:width,innerHeight:height,devicePixelRatio:1.5,performance:{now:()=>0},setTimeout(){return 0;},clearTimeout(){},requestAnimationFrame(){},addEventListener:window.addEventListener.bind(window)
   });

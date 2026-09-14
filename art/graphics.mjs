@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {cameraBounds,createResolutionController} from '../match-rules.mjs?version=alpha082';
+import {cameraBounds,createResolutionController} from '../match-rules.mjs?version=alpha09';
 import {EffectComposer} from './postprocessing/EffectComposer.js';
 import {RenderPass} from './postprocessing/RenderPass.js';
 import {UnrealBloomPass} from './postprocessing/UnrealBloomPass.js';
@@ -14,7 +14,7 @@ export const QUALITY_PRESETS=Object.freeze({
 
 // Object-space surface grain works on the merged models without UV seams.
 export function detailMaterial(material){
-  if(!material.isMeshStandardMaterial||material.userData.riftSurface||material.emissive?.getHex())return;
+  if(!material.isMeshStandardMaterial||material.userData.blenderSurface||material.userData.riftSurface||material.emissive?.getHex())return;
   material.userData.riftSurface=true;
   const compile=material.onBeforeCompile,cacheKey=material.customProgramCacheKey();
   material.onBeforeCompile=function(shader,renderer){

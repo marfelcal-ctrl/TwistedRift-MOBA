@@ -1,11 +1,12 @@
 import * as T from 'three';
-import {makeHero,heroes,animationClips} from './art/model-factory.mjs';
-import {optimizeModel} from './art/optimize-model.mjs?version=alpha082';
-import {detailMaterial} from './art/graphics.mjs?version=alpha082';
+import {makeHero,heroes,animationClips} from './art/model-factory.mjs?version=alpha09';
+import {optimizeModel} from './art/optimize-model.mjs?version=alpha09';
+import {detailMaterial} from './art/graphics.mjs?version=alpha09';
+import {HERO_PORTRAITS,prepareHeroPortrait} from './art/portraits.mjs';
 
 // One real 3D preview, sharing the game's renderer and reflection environment.
 // Only the selected hero is built; browsing does not run a second battlefield.
-export function createLobby({document,environment,renderer,player,items,onEnter,onPause,onRequestEntry,isEnded,buy,nearFountain,pitDefeated,graphics,onFirstSkill}){
+export function createLobby({document,environment,renderer,player,items,onEnter,onPause,onRequestEntry,isEnded,buy,nearFountain,pitDefeated,graphics,onFirstSkill,portraitLoader}){
   const el=document.querySelector('#lobby'),drawer=document.querySelector('#lobbyDrawer'),content=document.querySelector('#lobbyDrawerContent');
   const stage=new T.Scene();stage.background=new T.Color(0x0a080c);stage.fog=new T.FogExp2(0x120d12,.047);stage.environment=environment;stage.environmentIntensity=.4;
   const camera=new T.PerspectiveCamera(33,1,.1,65);camera.position.set(.2,2.7,10.5);camera.lookAt(0,2,0);
@@ -24,7 +25,7 @@ export function createLobby({document,environment,renderer,player,items,onEnter,
     if(model){mixer?.stopAllAction();mixer?.uncacheRoot(model);model.removeFromParent();ownedMaterials.forEach(m=>m.dispose());ownedGeometry.forEach(g=>g.dispose());}
     const raw=makeHero(id),materials=new Map();
     raw.traverse(o=>{if(o.isMesh){if(!materials.has(o.material)){const m=o.material.clone();delete m.userData.riftSurface;detailMaterial(m);materials.set(o.material,m);}o.material=materials.get(o.material);}});
-    model=optimizeModel(raw);ownedMaterials=[...materials.values()];const geometries=new Set();model.traverse(o=>{if(o.isMesh)geometries.add(o.geometry);});ownedGeometry=[...geometries];
+    model=optimizeModel(raw);ownedMaterials=[...materials.values()];const geometries=new Set();model.traverse(o=>{if(o.isMesh)geometries.add(o.geometry);});ownedGeometry=model.userData.blenderAsset?[]:[...geometries];
     selected=id;model.rotation.y=-.2;stage.add(model);mixer=new T.AnimationMixer(model);
     const clips=animationClips(model),idle=clips.find(c=>c.name==='Idle');if(idle)mixer.clipAction(idle).play();
     const arm=model.getObjectByName('arm_r');if(arm)arm.rotation.z=-.2;
@@ -48,7 +49,7 @@ export function createLobby({document,environment,renderer,player,items,onEnter,
     }else if(tab==='Heroes'){
       paragraph('Inspect the Rift’s champions in 3D. RAMZX is playable in this alpha.');
       const grid=document.createElement('div');grid.className='heroRoster';content.append(grid);
-      for(const id of heroes){const b=button(id.toUpperCase(),()=>{preview(id);renderTab();},'heroRosterCard');b.dataset.hero=id;b.setAttribute('aria-pressed',String(id===selected));const s=document.createElement('small');s.textContent=id==='ramzx'?'PLAYABLE':'3D GALLERY';b.append(s);grid.append(b);}
+      for(const id of heroes){const b=button(id.toUpperCase(),()=>{preview(id);renderTab();},'heroRosterCard');b.dataset.hero=id;b.setAttribute('aria-pressed',String(id===selected));const image=document.createElement('img');image.src=HERO_PORTRAITS[id];image.alt='';image.loading='lazy';b.prepend(image);const s=document.createElement('small');s.textContent=id==='ramzx'?'PLAYABLE':'3D GALLERY';b.append(s);grid.append(b);}
     }else if(tab==='Quests'){
       paragraph('Trials for your current descent. Progress follows this battle.');
       for(const [title,text,complete]of [['Baptism of Iron','Defeat the Rift Sentinel.',player.heroKills>0],['Temper the Soul','Reach hero level 6.',player.level>=6],['Silence the Pit','Slay the Pitlord.',pitDefeated()]]){const c=card(title,text),b=document.createElement('span');b.className='questState';b.textContent=complete?'COMPLETED':'IN PROGRESS';c.append(b);}
@@ -73,22 +74,7 @@ export function createLobby({document,environment,renderer,player,items,onEnter,
   document.addEventListener('keydown',e=>{if(!el.hidden&&e.code==='Escape')closeDrawer();});
   preview('ramzx');refresh();
   return {stage,camera,enter,begin,open,preview,get selected(){return selected;},get started(){return started;},
-    portrait(id){
-      preview(id);
-      const width=256,height=384,target=new T.WebGLRenderTarget(width,height),portraitCamera=new T.PerspectiveCamera(33,width/height,.1,65);
-      target.texture.colorSpace=T.SRGBColorSpace;
-      const box=new T.Box3().setFromObject(model,true),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());
-      const fov=Math.tan(portraitCamera.fov*Math.PI/360),distance=Math.max(size.y/(2*fov),size.x/(2*fov*portraitCamera.aspect))*1.14;
-      portraitCamera.position.set(center.x+.15,center.y+.25,center.z+distance);portraitCamera.lookAt(center);
-      const previous=renderer.getRenderTarget();
-      try{
-        renderer.setRenderTarget(target);renderer.shadowMap.needsUpdate=true;renderer.render(stage,portraitCamera);
-        const pixels=new Uint8Array(width*height*4);renderer.readRenderTargetPixels(target,0,0,width,height,pixels);
-        const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const context=canvas.getContext('2d'),image=context.createImageData(width,height);
-        for(let y=0;y<height;y++)image.data.set(pixels.subarray(y*width*4,(y+1)*width*4),(height-y-1)*width*4);
-        context.putImageData(image,0,0);return canvas.toDataURL('image/png');
-      }finally{renderer.setRenderTarget(previous);target.dispose();}
-    },
+    portrait(id){return portraitLoader?portraitLoader(id):prepareHeroPortrait(id,document);},
     resize(width,height){camera.aspect=width/height;camera.position.z=width/height<1?13:10.5;camera.setViewOffset(width,height,-width*(width/height<1?.055:.07),0,width,height);camera.updateProjectionMatrix();},
     update(dt){elapsed+=dt;mixer?.update(dt);model.rotation.y=-.2+Math.sin(elapsed*.28)*.13;rim.intensity=62+Math.sin(elapsed*1.4)*4;
       for(let i=0;i<48;i++){const a=i*2.399+elapsed*.035,r=1.2+(i%7)*.35;dummy.position.set(Math.sin(a)*r,(i*.163+elapsed*.13)%4.5,Math.cos(a)*r);dummy.scale.setScalar(.5+Math.sin(i+elapsed)*.3);dummy.updateMatrix();motes.setMatrixAt(i,dummy.matrix);}motes.instanceMatrix.needsUpdate=true;

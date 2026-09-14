@@ -1,9 +1,10 @@
+import {instantiateBlenderAsset} from './blender-assets.mjs';
 import * as T from 'three';
-import {MATCH,mapCoordinate,mapPoints} from '../match-rules.mjs?version=alpha082';
-import {makeTerrain} from './model-factory.mjs';
-import {optimizeModel} from './optimize-model.mjs?version=alpha082';
-import {BRUSHES} from '../vision-rules.mjs?version=alpha082';
-import {createNavigation,LANE_BARRIERS} from '../navigation.mjs?version=alpha082';
+import {MATCH,mapCoordinate,mapPoints} from '../match-rules.mjs?version=alpha09';
+import {makeTerrain} from './model-factory.mjs?version=alpha09';
+import {optimizeModel} from './optimize-model.mjs?version=alpha09';
+import {BRUSHES} from '../vision-rules.mjs?version=alpha09';
+import {createNavigation,LANE_BARRIERS} from '../navigation.mjs?version=alpha09';
 // Repeated terrain shares geometry and materials through GPU instancing.
 export function createBattlefield({scene,laneA,laneB,camps,wallSpots=[]}){
  const S=MATCH.mapScale,half=MATCH.worldSize/2;
@@ -22,7 +23,10 @@ export function createBattlefield({scene,laneA,laneB,camps,wallSpots=[]}){
  const waterCenter=t=>Math.sin(t*.075)*1.2;
  function terrainHeight(x,z){const riverD=Math.abs(x-z-waterCenter((x+z)*.5))/Math.SQRT2;const base=Math.min(Math.hypot(x+49*S,z-49*S),Math.hypot(x-49*S,z+49*S));if(base<8||Math.hypot(x,z)<7||laneDistance(x,z)<3.8||camps.some(c=>Math.hypot(x-c[0],z-c[1])<3.7))return 0;if(riverD<4.1)return -.55;const reserve=T.MathUtils.smoothstep(Math.min(laneDistance(x,z),riverD),3.5,7);return (.2+Math.sin(x*.17)*Math.cos(z*.12)*.16+Math.sin(z*.28+x*.14)*.1)*reserve;}
  function heightAt(x,z){for(const k of [-33*S,33*S]){const dx=x-k,dz=z-k,lx=(dx+dz)*Math.SQRT1_2,lz=(-dx+dz)*Math.SQRT1_2;if(Math.abs(lx)<2.9*.8&&Math.abs(lz)<6*.8)return .61*.8;}if(Math.min(Math.hypot(x+55*S,z-55*S),Math.hypot(x-55*S,z+55*S))<3.7*.8)return .77*.8;if(Math.hypot(x,z)<6.5)return .37;if(laneDistance(x,z)<2.7)return .31;return terrainHeight(x,z);}
- const terrain=new T.PlaneGeometry(MATCH.worldSize,MATCH.worldSize,112,112);terrain.rotateX(-Math.PI/2);const pos=terrain.attributes.position,colors=[];for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i);pos.setY(i,terrainHeight(x,z)-.055);const n=(Math.sin(x*.51+z*.27)+1)*.5;colors.push(.095+n*.023,.16+n*.025,.125+n*.023);}terrain.setAttribute('color',new T.Float32BufferAttribute(colors,3));terrain.computeVertexNormals();const land=new T.Mesh(terrain,new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95}));land.receiveShadow=true;root.add(land);
+ let land=instantiateBlenderAsset('battlefield_ground');
+ if(!land){ const terrain=new T.PlaneGeometry(MATCH.worldSize,MATCH.worldSize,112,112);terrain.rotateX(-Math.PI/2);const pos=terrain.attributes.position,colors=[];for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i);pos.setY(i,terrainHeight(x,z)-.055);const n=(Math.sin(x*.51+z*.27)+1)*.5;colors.push(.095+n*.023,.16+n*.025,.125+n*.023);}terrain.setAttribute('color',new T.Float32BufferAttribute(colors,3));terrain.computeVertexNormals();land=new T.Mesh(terrain,new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.95}));land.receiveShadow=true;
+}
+ root.add(land);
  const riverPos=[],riverUvs=[],riverIdx=[];for(let i=0;i<=120;i++){const t=(-65+i*130/120)*S,off=waterCenter(t);for(const side of [-1,1]){riverPos.push(t+off+side*2.6,-.19,t-side*2.6);riverUvs.push((side+1)/2,i/120*20);}if(i<120){const k=i*2;riverIdx.push(k,k+1,k+2,k+1,k+3,k+2);}}
  const riverGeo=new T.BufferGeometry();riverGeo.setAttribute('position',new T.Float32BufferAttribute(riverPos,3));riverGeo.setAttribute('uv',new T.Float32BufferAttribute(riverUvs,2));riverGeo.setIndex(riverIdx);riverGeo.computeVertexNormals();const waterUniforms={time:{value:0},fogColor:{value:new T.Color(0x111c25)}};
  const water=new T.Mesh(riverGeo,new T.ShaderMaterial({uniforms:waterUniforms,side:T.DoubleSide,vertexShader:`uniform float time;varying vec2 vUv;varying vec3 vWorld;void main(){vUv=uv;vec3 p=position;p.y+=sin(p.x*.7+time*1.6)*.028+sin(p.z*1.1-time)*.019;vWorld=(modelMatrix*vec4(p,1.)).xyz;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`,fragmentShader:`uniform float time;uniform vec3 fogColor;varying vec2 vUv;varying vec3 vWorld;void main(){float flow=sin(vUv.y*18.-time*3.+sin(vUv.x*18.+time));float wave=pow(max(0.,flow),14.);float edge=pow(abs(vUv.x-.5)*2.,12.);vec3 c=mix(vec3(.015,.085,.12),vec3(.035,.21,.26),.5+.5*sin(vUv.y*.37+time*.3));c+=vec3(.15,.32,.37)*(wave*.5+edge*.35);float f=1.-exp(-length(cameraPosition-vWorld)*.006);gl_FragColor=vec4(mix(c,fogColor,f),1.);#include <tonemapping_fragment>\n#include <colorspace_fragment>\n}`.replace(';#include',';\n#include')}));root.add(water);

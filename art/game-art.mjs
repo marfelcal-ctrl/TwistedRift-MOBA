@@ -1,8 +1,8 @@
 import * as T from 'three';
-import {MATCH,mapPoints} from '../match-rules.mjs?version=alpha082';
-import {makeHero,makeCreature,makeMinion,makeStructure,makeTerrain,animationClips} from './model-factory.mjs';
-import {optimizeModel} from './optimize-model.mjs?version=alpha082';
-import {detailMaterial} from './graphics.mjs?version=alpha082';
+import {MATCH,mapPoints} from '../match-rules.mjs?version=alpha09';
+import {makeHero,makeCreature,makeMinion,makeStructure,makeTerrain,animationClips} from './model-factory.mjs?version=alpha09';
+import {optimizeModel} from './optimize-model.mjs?version=alpha09';
+import {detailMaterial} from './graphics.mjs?version=alpha09';
 
 // Keep combat objects and their original animation references intact. Repeated
 // units share geometry and materials; only their visible models are replaced.
@@ -13,7 +13,7 @@ export function installRiftArt({scene,player,enemies,towers,cores,pitlord,pitOwn
       const model=optimizeModel(build());model.traverse(o=>{if(o.isMesh)detailMaterial(o.material);});templates.set(key,model);
     }
     const model=templates.get(key).clone(true);
-    model.traverse(o=>{if(o.isGroup&&o.name.startsWith('banner_'))banners.push({joint:o,cloth:o.children.find(c=>c.name.startsWith('cloth_'))});});
+    model.traverse(o=>{if(o.name.startsWith('banner_'))banners.push({joint:o,cloth:o.children.find(c=>c.name.startsWith('cloth_'))});});
     return model;
   }
   function animate(model,owner,hero=false){

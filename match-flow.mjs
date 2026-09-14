@@ -12,14 +12,23 @@ export function createMatchFlow({document,portrait,onBegin,onCancel,onPreviewRes
     const footer=document.createElement('footer'),playerName=document.createElement('strong');playerName.textContent=i===0?'YOU · RAMZX':`${i<5?'ALLY':'ENEMY'} ${i<5?i+1:i-4} · PREVIEW`;
     const progress=document.createElement('small');progress.textContent='0%';const track=document.createElement('div');track.className='cardProgress';const fill=document.createElement('i');track.append(fill);footer.append(playerName,progress,track);card.append(name,footer);(i<5?document.querySelector('#allyCards'):document.querySelector('#enemyCards')).append(card);cards.push({card,progress,fill});
   }
-  let phase='idle',time=0,accepted=false,job=0,jobStage=0,finishedTime=0;
-  function show(){phase='ready';time=0;accepted=false;job=0;jobStage=0;finishedTime=0;root.hidden=false;ready.hidden=false;versus.hidden=true;accept.disabled=false;accept.textContent='ENTER BATTLE';
+  let phase='idle',time=0,accepted=false,job=0,jobStage=0,finishedTime=0,generation=0;
+  function show(){generation++;phase='ready';time=0;accepted=false;job=0;jobStage=0;finishedTime=0;root.hidden=false;ready.hidden=false;versus.hidden=true;accept.disabled=false;accept.textContent='ENTER BATTLE';
     for(const s of shields){s.classList.remove('ready');s.setAttribute('aria-label',s===shields[0]?'Your acceptance pending':'Preview slot, pending');}
     for(const c of cards){c.card.querySelector('img')?.remove();c.progress.textContent='0%';c.fill.style.width='0%';c.card.removeAttribute('data-portrait-error');}
     document.querySelector('#readyCountdown').textContent='20';document.querySelector('#readyCount').textContent='0 / 10 READY';document.querySelector('.runestone').style.setProperty('--countdown-angle','360deg');document.querySelector('#flowStatus').textContent='Confirm your descent. Other seals show the preview lineup.';document.querySelector('#assetProgressFill').style.width='0%';document.querySelector('#assetProgress').textContent='Preparing hero portraits · 0 / 10';accept.focus();
   }
-  function cancel(reason=''){if(phase==='idle')return;phase='idle';root.hidden=true;onPreviewReset();onCancel(reason);}
+  function cancel(reason=''){if(phase==='idle')return;generation++;phase='idle';root.hidden=true;onPreviewReset();onCancel(reason);}
   function startLoading(){phase='loading';ready.hidden=true;versus.hidden=false;time=0;document.querySelector('#assetProgress').textContent='Preparing hero portraits · 0 / 10';}
+  function completePortrait(index,token,src,error){
+    if(token!==generation||phase!=='loading'||index!==job)return;
+    const c=cards[index];
+    if(src&&!error){const img=document.createElement('img');img.alt=`${lineup[index].toUpperCase()} hero portrait`;img.src=src;c.card.prepend(img);c.progress.textContent='100%';}
+    else{c.progress.textContent='READY · NO PORTRAIT';c.card.dataset.portraitError='true';}
+    c.fill.style.width='100%';job++;jobStage=0;
+    document.querySelector('#assetProgress').textContent=`Preparing hero portraits · ${job} / 10`;
+    document.querySelector('#assetProgressFill').style.width=`${job*10}%`;
+  }
   accept.addEventListener('click',()=>{if(phase!=='ready'||accepted)return;accepted=true;accept.disabled=true;accept.textContent='OATH SEALED';shields[0].classList.add('ready');shields[0].setAttribute('aria-label','Your oath accepted');document.querySelector('#flowStatus').textContent='Preparing the descent…';});
   document.querySelector('#cancelMatch').addEventListener('click',()=>cancel());
   document.addEventListener('keydown',e=>{if(e.code==='Escape'&&phase==='ready')cancel();});
@@ -33,11 +42,14 @@ export function createMatchFlow({document,portrait,onBegin,onCancel,onPreviewRes
     }else if(phase==='loading'){
       if(job<lineup.length){
         const c=cards[job];
-        if(jobStage===0){c.progress.textContent='25%';c.fill.style.width='25%';jobStage=1;}
-        else{
-          try{const src=portrait(lineup[job]);if(src){const img=document.createElement('img');img.alt=`${lineup[job].toUpperCase()} 3D hero portrait`;img.src=src;c.card.prepend(img);}else throw Error('Portrait unavailable');c.progress.textContent='100%';}
-          catch{c.progress.textContent='READY · NO PORTRAIT';c.card.dataset.portraitError='true';}
-          c.fill.style.width='100%';job++;jobStage=0;document.querySelector('#assetProgress').textContent=`Preparing hero portraits · ${job} / 10`;document.querySelector('#assetProgressFill').style.width=`${job*10}%`;
+        if(jobStage===0){c.progress.textContent='LOADING';jobStage=1;}
+        else if(jobStage===1){
+          jobStage=2;const index=job,token=generation;
+          try{
+            const result=portrait(lineup[index]);
+            if(result&&typeof result.then==='function')result.then(src=>completePortrait(index,token,src),error=>completePortrait(index,token,null,error));
+            else completePortrait(index,token,result);
+          }catch(error){completePortrait(index,token,null,error);}
         }
       }else{finishedTime+=dt;if(finishedTime>=1.2){phase='idle';root.hidden=true;onPreviewReset();onBegin();}}
     }

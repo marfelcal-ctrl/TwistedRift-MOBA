@@ -1,0 +1,299 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 8814,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 2881,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 2881,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2881,
+      "max": [
+        16165,
+        32767,
+        16513
+      ],
+      "min": [
+        -16165,
+        -32767,
+        -16513
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 2881,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 4
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 17628,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 3157,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 8814
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 17628,
+      "byteLength": 23048,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 3160,
+          "byteLength": 19295,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 2881
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 40676,
+      "byteLength": 11524,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 22456,
+          "byteLength": 217,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 2881
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 52200,
+      "byteLength": 23048,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 22676,
+          "byteLength": 14504,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 2881
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 75248,
+      "byteLength": 23048,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 37180,
+          "byteLength": 17398,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 2881
+        }
+      }
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "Weathered stone normal",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-4853a2902092cc7c.webp"
+    },
+    {
+      "name": "Weathered stone color",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-eb11894954d89b5d.webp"
+    },
+    {
+      "name": "Weathered stone roughness metalness",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-74120f0f7fbce6d0.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "pine.bin",
+      "byteLength": 54580
+    },
+    {
+      "byteLength": 98296,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "Rift · Weathered stone",
+      "extras": {
+        "riftTextured": true
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1,
+        "scale": 0.550000011920929
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Mesh_1.031",
+      "primitives": [
+        {
+          "attributes": {
+            "TEXCOORD_0": 1,
+            "COLOR_0": 2,
+            "POSITION": 3,
+            "NORMAL": 4
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "pine__Mesh_1",
+      "extras": {
+        "riftTextured": true
+      },
+      "translation": [
+        -0.049796611070632935,
+        1.9260051572928205,
+        0.07680657505989075
+      ],
+      "scale": [
+        1.927662101923488,
+        1.927662101923488,
+        1.927662101923488
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "pine",
+      "extras": {
+        "asset": "pine",
+        "category": "Terrain",
+        "referencePass": 2,
+        "riftAsset": "pine",
+        "title": "PINE",
+        "authoring": "Blender 4.5 · UV/PBR surfaces · rigid articulated animation"
+      },
+      "children": [
+        0
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

@@ -1,4 +1,4 @@
-import {MATCH,groundDistanceSq,mapPoints} from './match-rules.mjs?version=alpha082';
+import {MATCH,groundDistanceSq,mapPoints} from './match-rules.mjs?version=alpha09';
 
 export const VISION=Object.freeze({hero:12,minion:7,tower:9.5,core:11,revealSeconds:2});
 // Tall grass conceals occupants. Decorative trees are passable; stone terrain

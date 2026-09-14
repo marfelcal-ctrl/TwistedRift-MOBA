@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {MATCH,minimapProject} from '../match-rules.mjs?version=alpha082';
+import {MATCH,minimapProject} from '../match-rules.mjs?version=alpha09';
 
 // One small shared texture darkens unexplored terrain. Model visibility and
 // targeting are decided separately and synchronously by the team-vision rules.
