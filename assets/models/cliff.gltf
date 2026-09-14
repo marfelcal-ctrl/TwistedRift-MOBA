@@ -1,0 +1,671 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 360,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 240,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 240,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 1380,
+      "normalized": false,
+      "byteOffset": 720,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 1140,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 1140,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 2340,
+      "normalized": false,
+      "byteOffset": 3480,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 776,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 776,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 240,
+      "max": [
+        25869,
+        7256,
+        12933
+      ],
+      "min": [
+        -26128,
+        -12473,
+        11762
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 7
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 240,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 8
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1140,
+      "max": [
+        32767,
+        29160,
+        17840
+      ],
+      "min": [
+        -32767,
+        -29160,
+        -17840
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 9
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1140,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 10
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 776,
+      "max": [
+        24184,
+        -10548,
+        13759
+      ],
+      "min": [
+        -32477,
+        -19522,
+        12811
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 11
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 776,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 12
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 8160,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 1403,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 4080
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 8160,
+      "byteLength": 1920,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1404,
+          "byteLength": 1402,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 240
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 10080,
+      "byteLength": 960,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2808,
+          "byteLength": 49,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 240
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 11040,
+      "byteLength": 9120,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2860,
+          "byteLength": 7820,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1140
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 20160,
+      "byteLength": 4560,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 10680,
+          "byteLength": 105,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 1140
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 24720,
+      "byteLength": 6208,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 10788,
+          "byteLength": 4750,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 776
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 30928,
+      "byteLength": 3104,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 15540,
+          "byteLength": 85,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 776
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 34032,
+      "byteLength": 1920,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 15628,
+          "byteLength": 990,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 240
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 35952,
+      "byteLength": 1920,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 16620,
+          "byteLength": 505,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 240
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 37872,
+      "byteLength": 9120,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 17128,
+          "byteLength": 6390,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1140
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 46992,
+      "byteLength": 9120,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 23520,
+          "byteLength": 3829,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1140
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 56112,
+      "byteLength": 6208,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 27352,
+          "byteLength": 3379,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 776
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 62320,
+      "byteLength": 6208,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 30732,
+          "byteLength": 4685,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 776
+        }
+      }
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 4
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 3
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 5
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 7
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 6
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 8
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "Dark leather normal",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-0bba31db93ee7930.webp"
+    },
+    {
+      "name": "Dark leather color",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-15c7f5964deff57a.webp"
+    },
+    {
+      "name": "Dark leather roughness metalness",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-ac0465c35b5aefec.webp"
+    },
+    {
+      "name": "Weathered stone normal",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-4853a2902092cc7c.webp"
+    },
+    {
+      "name": "Weathered stone color",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-eb11894954d89b5d.webp"
+    },
+    {
+      "name": "Weathered stone roughness metalness",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-74120f0f7fbce6d0.webp"
+    },
+    {
+      "name": "Skin and bone normal",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-4559974a06565aa7.webp"
+    },
+    {
+      "name": "Skin and bone color",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-a9f4de518b3c7cb7.webp"
+    },
+    {
+      "name": "Skin and bone roughness metalness",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-b996c2b2f691ba30.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "cliff.bin",
+      "byteLength": 35420
+    },
+    {
+      "byteLength": 68528,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "Rift · Dark leather",
+      "extras": {
+        "riftTextured": true
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1,
+        "scale": 0.550000011920929
+      }
+    },
+    {
+      "name": "Rift · Weathered stone",
+      "extras": {
+        "riftTextured": true
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicRoughnessTexture": {
+          "index": 5
+        }
+      },
+      "normalTexture": {
+        "index": 4,
+        "scale": 0.550000011920929
+      }
+    },
+    {
+      "name": "Rift · Skin and bone",
+      "extras": {
+        "riftTextured": true
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 6
+        },
+        "metallicRoughnessTexture": {
+          "index": 8
+        }
+      },
+      "normalTexture": {
+        "index": 7,
+        "scale": 0.550000011920929
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Mesh_1.032",
+      "primitives": [
+        {
+          "attributes": {
+            "TEXCOORD_0": 1,
+            "COLOR_0": 2,
+            "POSITION": 9,
+            "NORMAL": 10
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        },
+        {
+          "attributes": {
+            "TEXCOORD_0": 4,
+            "COLOR_0": 5,
+            "POSITION": 11,
+            "NORMAL": 12
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 3
+        },
+        {
+          "attributes": {
+            "TEXCOORD_0": 7,
+            "COLOR_0": 8,
+            "POSITION": 13,
+            "NORMAL": 14
+          },
+          "mode": 4,
+          "material": 2,
+          "indices": 6
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "cliff__Mesh_1",
+      "extras": {
+        "riftTextured": true
+      },
+      "translation": [
+        0.007758677005767822,
+        1.3160000294446945,
+        -0.05851167440414429
+      ],
+      "scale": [
+        1.9598247408866882,
+        1.9598247408866882,
+        1.9598247408866882
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "cliff",
+      "extras": {
+        "asset": "cliff",
+        "category": "Terrain",
+        "referencePass": 2,
+        "riftAsset": "cliff",
+        "title": "CLIFF",
+        "authoring": "Blender 4.5 · UV/PBR surfaces · rigid articulated animation"
+      },
+      "children": [
+        0
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

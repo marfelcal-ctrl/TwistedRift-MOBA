@@ -1,0 +1,172 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 2880,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1604,
+      "max": [
+        32767,
+        32767,
+        665
+      ],
+      "min": [
+        -32767,
+        -32767,
+        -665
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1604,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 2
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 5760,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 984,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 2880
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 5760,
+      "byteLength": 12832,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 984,
+          "byteLength": 6893,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1604
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 18592,
+      "byteLength": 12832,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 7880,
+          "byteLength": 3461,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1604
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "fx_ring.bin",
+      "byteLength": 11344
+    },
+    {
+      "byteLength": 31424,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "Rift VFX",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.949999988079071,
+          0.07000000029802322,
+          0.019999999552965164,
+          1
+        ],
+        "roughnessFactor": 0.4000000059604645,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Torus",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "fx_ring",
+      "extras": {
+        "riftAsset": "fx_ring",
+        "category": "Effects"
+      },
+      "scale": [
+        1.0240000486373901,
+        1.0240000486373901,
+        1.0240000486373901
+      ],
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

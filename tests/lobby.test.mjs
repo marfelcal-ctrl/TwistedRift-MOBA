@@ -50,3 +50,23 @@ test('armory purchases use battle gold, quest states reflect play, and scoreboar
     g.document.querySelector('#battleMenu').click();g.document.querySelector('[data-lobby-tab="Quests"]').click();assert.equal(g.document.querySelector('.questState').textContent,'COMPLETED');
   }finally{await g.dispose();}
 });
+
+test('portrait loading waits for decoding and ignores completions from a canceled entry',async()=>{
+  const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,enableJavaScriptEvaluation:false}}),document=window.document;
+  document.write(await fs.readFile(new URL('../index.html',import.meta.url),'utf8'));
+  const pending=[];let began=0;
+  const flow=createMatchFlow({document,portrait:()=>new Promise((resolve,reject)=>pending.push({resolve,reject})),onBegin:()=>began++,onCancel(){},onPreviewReset(){}});
+  function start(){flow.show();flow.update(2);document.querySelector('#acceptBattle').click();flow.update(.1);flow.update(.1);flow.update(.1);}
+  try{
+    start();for(let i=0;i<40;i++)flow.update(.1);
+    assert.equal(pending.length,1);assert.equal(began,0);assert.equal(flow.phase,'loading');
+    assert.equal(document.querySelectorAll('.versusCard img').length,0);
+    flow.cancel();start();pending[0].resolve('data:image/png;base64,stale');await Promise.resolve();
+    assert.equal(document.querySelectorAll('.versusCard img').length,0,'canceled completion cannot change new cards');
+    pending[1].resolve('data:image/png;base64,current');await Promise.resolve();
+    assert.equal(document.querySelectorAll('.versusCard img').length,1);
+    flow.update(.1);flow.update(.1);pending[2].reject(new Error('Missing portrait'));await Promise.resolve();
+    assert.equal(document.querySelectorAll('[data-portrait-error="true"]').length,1);
+    assert.equal(document.querySelector('#assetProgressFill').style.width,'20%');
+  }finally{flow.cancel();await window.happyDOM.abort();}
+});

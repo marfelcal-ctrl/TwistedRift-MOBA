@@ -1,0 +1,321 @@
+{
+  "version": "alpha09",
+  "blender": "4.5.3 LTS",
+  "assets": [
+    {
+      "id": "archivist",
+      "category": "Creatures",
+      "title": "ARCHIVIST",
+      "file": "archivist.gltf",
+      "bytes": 315268
+    },
+    {
+      "id": "battlefield_ground",
+      "category": "Terrain",
+      "title": "Twisted Rift · 84 × 84",
+      "file": "battlefield_ground.gltf",
+      "bytes": 150627
+    },
+    {
+      "id": "blue_cannon",
+      "category": "Minions",
+      "title": "BLUE CANNON",
+      "file": "blue_cannon.gltf",
+      "bytes": 120692
+    },
+    {
+      "id": "blue_core",
+      "category": "Structures",
+      "title": "BLUE CORE",
+      "file": "blue_core.gltf",
+      "bytes": 98902
+    },
+    {
+      "id": "blue_defense_tower",
+      "category": "Structures",
+      "title": "BLUE DEFENSE_TOWER",
+      "file": "blue_defense_tower.gltf",
+      "bytes": 131980
+    },
+    {
+      "id": "blue_fountain",
+      "category": "Structures",
+      "title": "BLUE FOUNTAIN",
+      "file": "blue_fountain.gltf",
+      "bytes": 103787
+    },
+    {
+      "id": "blue_melee",
+      "category": "Minions",
+      "title": "BLUE MELEE",
+      "file": "blue_melee.gltf",
+      "bytes": 136749
+    },
+    {
+      "id": "blue_ranged",
+      "category": "Minions",
+      "title": "BLUE RANGED",
+      "file": "blue_ranged.gltf",
+      "bytes": 83170
+    },
+    {
+      "id": "blue_siege",
+      "category": "Minions",
+      "title": "BLUE SIEGE",
+      "file": "blue_siege.gltf",
+      "bytes": 142729
+    },
+    {
+      "id": "blue_tower",
+      "category": "Structures",
+      "title": "BLUE TOWER",
+      "file": "blue_tower.gltf",
+      "bytes": 128824
+    },
+    {
+      "id": "bridge",
+      "category": "Terrain",
+      "title": "BRIDGE",
+      "file": "bridge.gltf",
+      "bytes": 94985
+    },
+    {
+      "id": "cliff",
+      "category": "Terrain",
+      "title": "CLIFF",
+      "file": "cliff.gltf",
+      "bytes": 48864
+    },
+    {
+      "id": "fx_arc",
+      "category": "Effects",
+      "title": "FX ARC",
+      "file": "fx_arc.gltf",
+      "bytes": 7347
+    },
+    {
+      "id": "fx_beam",
+      "category": "Effects",
+      "title": "FX BEAM",
+      "file": "fx_beam.gltf",
+      "bytes": 3676
+    },
+    {
+      "id": "fx_orb",
+      "category": "Effects",
+      "title": "FX ORB",
+      "file": "fx_orb.gltf",
+      "bytes": 5491
+    },
+    {
+      "id": "fx_ring",
+      "category": "Effects",
+      "title": "FX RING",
+      "file": "fx_ring.gltf",
+      "bytes": 14554
+    },
+    {
+      "id": "fx_rune",
+      "category": "Effects",
+      "title": "FX RUNE",
+      "file": "fx_rune.gltf",
+      "bytes": 4234
+    },
+    {
+      "id": "fx_shard",
+      "category": "Effects",
+      "title": "FX SHARD",
+      "file": "fx_shard.gltf",
+      "bytes": 3732
+    },
+    {
+      "id": "fx_shell",
+      "category": "Effects",
+      "title": "FX SHELL",
+      "file": "fx_shell.gltf",
+      "bytes": 12654
+    },
+    {
+      "id": "grimm",
+      "category": "Heroes",
+      "title": "The Black Bastion",
+      "file": "grimm.gltf",
+      "bytes": 596744
+    },
+    {
+      "id": "kaelor",
+      "category": "Heroes",
+      "title": "The Iron Revenant",
+      "file": "kaelor.gltf",
+      "bytes": 637952
+    },
+    {
+      "id": "kairo",
+      "category": "Heroes",
+      "title": "The Rift Ranger",
+      "file": "kairo.gltf",
+      "bytes": 578921
+    },
+    {
+      "id": "lane_tile",
+      "category": "Terrain",
+      "title": "LANE TILE",
+      "file": "lane_tile.gltf",
+      "bytes": 32465
+    },
+    {
+      "id": "nyra",
+      "category": "Heroes",
+      "title": "Veil of Death",
+      "file": "nyra.gltf",
+      "bytes": 601680
+    },
+    {
+      "id": "pine",
+      "category": "Terrain",
+      "title": "PINE",
+      "file": "pine.gltf",
+      "bytes": 60395
+    },
+    {
+      "id": "pitlord",
+      "category": "Creatures",
+      "title": "PITLORD",
+      "file": "pitlord.gltf",
+      "bytes": 306238
+    },
+    {
+      "id": "ramzx",
+      "category": "Heroes",
+      "title": "The Dread Marshal",
+      "file": "ramzx.gltf",
+      "bytes": 558887
+    },
+    {
+      "id": "raze",
+      "category": "Heroes",
+      "title": "The Scarlet Outlaw",
+      "file": "raze.gltf",
+      "bytes": 629953
+    },
+    {
+      "id": "red_cannon",
+      "category": "Minions",
+      "title": "RED CANNON",
+      "file": "red_cannon.gltf",
+      "bytes": 120339
+    },
+    {
+      "id": "red_core",
+      "category": "Structures",
+      "title": "RED CORE",
+      "file": "red_core.gltf",
+      "bytes": 98989
+    },
+    {
+      "id": "red_defense_tower",
+      "category": "Structures",
+      "title": "RED DEFENSE_TOWER",
+      "file": "red_defense_tower.gltf",
+      "bytes": 132205
+    },
+    {
+      "id": "red_fountain",
+      "category": "Structures",
+      "title": "RED FOUNTAIN",
+      "file": "red_fountain.gltf",
+      "bytes": 103841
+    },
+    {
+      "id": "red_melee",
+      "category": "Minions",
+      "title": "RED MELEE",
+      "file": "red_melee.gltf",
+      "bytes": 136841
+    },
+    {
+      "id": "red_ranged",
+      "category": "Minions",
+      "title": "RED RANGED",
+      "file": "red_ranged.gltf",
+      "bytes": 83409
+    },
+    {
+      "id": "red_siege",
+      "category": "Minions",
+      "title": "RED SIEGE",
+      "file": "red_siege.gltf",
+      "bytes": 142545
+    },
+    {
+      "id": "red_tower",
+      "category": "Structures",
+      "title": "RED TOWER",
+      "file": "red_tower.gltf",
+      "bytes": 128987
+    },
+    {
+      "id": "rift_pit",
+      "category": "Terrain",
+      "title": "RIFT PIT",
+      "file": "rift_pit.gltf",
+      "bytes": 73584
+    },
+    {
+      "id": "riftstalker",
+      "category": "Creatures",
+      "title": "RIFTSTALKER",
+      "file": "riftstalker.gltf",
+      "bytes": 245778
+    },
+    {
+      "id": "ruin_wall",
+      "category": "Terrain",
+      "title": "RUIN WALL",
+      "file": "ruin_wall.gltf",
+      "bytes": 46516
+    },
+    {
+      "id": "scorchbeast",
+      "category": "Creatures",
+      "title": "SCORCHBEAST",
+      "file": "scorchbeast.gltf",
+      "bytes": 295966
+    },
+    {
+      "id": "sera",
+      "category": "Heroes",
+      "title": "The Last Saint",
+      "file": "sera.gltf",
+      "bytes": 470795
+    },
+    {
+      "id": "stoneback",
+      "category": "Creatures",
+      "title": "STONEBACK",
+      "file": "stoneback.gltf",
+      "bytes": 255978
+    },
+    {
+      "id": "veyra",
+      "category": "Heroes",
+      "title": "Mistress of the Void",
+      "file": "veyra.gltf",
+      "bytes": 467616
+    },
+    {
+      "id": "volkrin",
+      "category": "Heroes",
+      "title": "Beast of the Rift",
+      "file": "volkrin.gltf",
+      "bytes": 457642
+    },
+    {
+      "id": "zyrel",
+      "category": "Heroes",
+      "title": "Storm Heretic",
+      "file": "zyrel.gltf",
+      "bytes": 617064
+    }
+  ]
+}

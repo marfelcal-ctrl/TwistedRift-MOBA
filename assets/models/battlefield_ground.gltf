@@ -1,0 +1,289 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.0",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 75264,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 12791,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC4",
+      "componentType": 5121,
+      "count": 12791,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 12791,
+      "max": [
+        32767,
+        392,
+        32767
+      ],
+      "min": [
+        -32767,
+        -392,
+        -32767
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 12791,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 4
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 150528,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 25653,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 75264
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 150528,
+      "byteLength": 102328,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 25656,
+          "byteLength": 45040,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 12791
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 252856,
+      "byteLength": 51164,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 70696,
+          "byteLength": 833,
+          "mode": "ATTRIBUTES",
+          "byteStride": 4,
+          "count": 12791
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 304020,
+      "byteLength": 102328,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 71532,
+          "byteLength": 34252,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 12791
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 406348,
+      "byteLength": 102328,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 105784,
+          "byteLength": 39186,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 12791
+        }
+      }
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 1
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 0
+        }
+      }
+    },
+    {
+      "sampler": 0,
+      "extensions": {
+        "EXT_texture_webp": {
+          "source": 2
+        }
+      }
+    }
+  ],
+  "images": [
+    {
+      "name": "Weathered stone normal",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-4853a2902092cc7c.webp"
+    },
+    {
+      "name": "Weathered stone color",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-eb11894954d89b5d.webp"
+    },
+    {
+      "name": "Weathered stone roughness metalness",
+      "mimeType": "image/webp",
+      "uri": "textures/surface-74120f0f7fbce6d0.webp"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "battlefield_ground.bin",
+      "byteLength": 144972
+    },
+    {
+      "byteLength": 508676,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "Rift · Weathered stone",
+      "extras": {
+        "riftTextured": true
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "normalTexture": {
+        "index": 1,
+        "scale": 0.550000011920929
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Mesh_0.037",
+      "primitives": [
+        {
+          "attributes": {
+            "TEXCOORD_0": 1,
+            "COLOR_0": 2,
+            "POSITION": 3,
+            "NORMAL": 4
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "battlefield_ground",
+      "extras": {
+        "riftAsset": "battlefield_ground",
+        "category": "Terrain",
+        "title": "Twisted Rift · 84 × 84",
+        "authoring": "Blender 4.5 · UV/PBR surfaces · rigid articulated animation",
+        "riftTextured": true
+      },
+      "translation": [
+        0,
+        -0.10208211839199066,
+        0
+      ],
+      "scale": [
+        42,
+        42,
+        42
+      ],
+      "mesh": 0
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "EXT_texture_webp",
+    "KHR_mesh_quantization"
+  ]
+}

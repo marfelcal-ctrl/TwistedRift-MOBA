@@ -4,6 +4,8 @@ import {mergeGeometries} from './utils/BufferGeometryUtils.js';
 // triangle and animation joint is retained; static detail takes fewer draw calls.
 const jointName=/^(arm_|leg_|wheel_|banner_|cloth_|cape$|torso$|head$|weapon$|shield$)/;
 export function optimizeModel(root){
+  // Exported meshes already contain merged detail, UVs and animation bindings.
+  if(root.userData.blenderAsset)return root;
   function flatten(parent){
     for(const child of [...parent.children]){
       if(child.isGroup&&!jointName.test(child.name)){

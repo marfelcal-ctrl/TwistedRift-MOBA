@@ -1,5 +1,6 @@
+import {blenderEffectGeometry} from './blender-assets.mjs';
 import * as T from 'three';
-import {MATCH} from '../match-rules.mjs?version=alpha082';
+import {MATCH} from '../match-rules.mjs?version=alpha09';
 
 // Visual particles are pooled. Projectile callbacks have their own lifetime so
 // lowering graphics or reaching the visual budget never drops combat damage.
@@ -9,6 +10,7 @@ export function createCombatVfx({scene,player,camps=[],focus=null,extent=()=>({x
     arc:new T.RingGeometry(.68,1,56,1,0,Math.PI*1.15),
     shell:new T.IcosahedronGeometry(1,3),beam:new T.CylinderGeometry(.06,.2,1,10,1,true),
     shard:new T.OctahedronGeometry(1),rune:new T.TorusGeometry(1,.02,4,6)};
+  for(const key of Object.keys(shapes)){const authored=blenderEffectGeometry('fx_'+key);if(authored){shapes[key].dispose();shapes[key]=authored;}}
   const effects=[],shots=[],particles=[],capacity=1000;let budget=1000,elapsed=0,ambientTime=0;
   const particleGeometry=new T.IcosahedronGeometry(1,0),life=new T.InstancedBufferAttribute(new Float32Array(capacity),1);
   particleGeometry.setAttribute('riftLife',life);

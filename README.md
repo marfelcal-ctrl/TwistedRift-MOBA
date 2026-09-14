@@ -1,6 +1,32 @@
-# Twisted Rift 3D — Alpha 0.8.2
+# Twisted Rift 3D — Alpha 0.9
 
 Browser MOBA prototype with a medieval lobby, runestone acceptance preview, ten-card versus screen, two-lane battlefield, jungle, Pitlord, item shop, and player-selected level upgrades.
+
+## Alpha 0.9: supplied portraits and Blender assets
+
+The ten supplied hero portraits now appear in the loading screen and hero gallery.
+The complete frames remain visible, and loading progress waits for image decoding.
+The game loads 45 assets exported from the recovered Blender library: ten heroes,
+eight minions, five creatures, eight structures, seven terrain pieces, and seven
+effect shapes. Models include UVs, shared PBR texture maps, and Blender NLA clips.
+
+This continues the Alpha 0.8.2 game and preserves its camera, movement, collision,
+terrain-aware vision, bush concealment, progression, and wave rules. RAMZX remains
+the playable hero in the existing solo practice build. The other heroes are
+available in the gallery and the labelled versus preview.
+
+The compressed model package is 9.69 MB; the portraits total 1.28 MB. Three.js is
+served locally. Model instances share geometry and textures while retaining
+independent poses. The detailed models remain stylized first-pass assets; this
+update does not reach finished MLBB/HoK visual quality or add skinned rigs.
+
+**46 tests pass**, including all 45 actual model exports and async portrait jobs.
+The cloud browser blocks the local preview, so GPU appearance and device FPS
+remain unverified. See [the Blender asset guide](docs/BLENDER-ASSETS.md) for the
+asset mapping, free tools, re-export steps, and visual checks before merging.
+
+The sections below describe the previous releases; Alpha 0.9 replaces the older
+procedural portrait and model preparation described there.
 
 ## Alpha 0.8.2: mobile framing and terrain-aware vision
 
@@ -117,4 +143,4 @@ Additional regression checks cover thin and rotated sight blockers, clear openin
 
 ## Publishing
 
-Serve this directory through an HTTP server or GitHub Pages. `index.html` loads the Alpha 0.8.2 additions through the existing `alpha05_bootstrap.js`, including `alpha08_injection.js`, `lobby.mjs`, `match-flow.mjs`, and `dark-ui.css`. This work does not itself merge or deploy the prepared changes.
+Serve this directory through an HTTP server or GitHub Pages. `index.html` loads the Alpha 0.9 additions through the existing `alpha05_bootstrap.js`, including `alpha08_injection.js`, `lobby.mjs`, `match-flow.mjs`, and `dark-ui.css`. This work does not itself merge or deploy the prepared changes.
